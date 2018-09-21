@@ -1,5 +1,21 @@
 grammar MiniJava;
-type : 'int' '[' ']' | 'boolean' | 'int' | IDENTIFIER ;
+
+goal : mainClass (classDeclaration)* EOF ;
+
+mainClass : 'class' IDENTIFIER '{' 'public' 'static' 'void' 'main' '(' 'String' '[' ']' IDENTIFIER ')' '{' statement '}' '}' ;
+
+classDeclaration : 'class' IDENTIFIER ('extends' IDENTIFIER)? '{' (varDeclaration)* (methodDeclaration*) '}' ;
+
+varDeclaration : type IDENTIFIER ';' ;
+
+methodDeclaration : 'public' type IDENTIFIER '(' (type IDENTIFIER (',' type IDENTIFIER)*)? ')' '{' (varDeclaration)* (statement)* 'return' expression ';' '}' ;
+
+type :
+      'int' '[' ']'
+    | 'boolean'
+    | 'int'
+    | IDENTIFIER
+    ;
 
 statement :
       '{' (statement)* '}'
@@ -26,7 +42,7 @@ expression :
     | '(' expression ')'
     ;
 
-IDENTIFIER : [a-zA-Z]+ ;
+IDENTIFIER : [a-zA-Z_]+ ;
 INTEGER_LITERAL : [0-9]+ ;
 
 AND : '&&' ;
@@ -35,3 +51,5 @@ PLUS : '+' ;
 MINUS : '-' ;
 TIMES : '*' ;
 NOT : '!';
+
+WS: [ \n\t\r]+ -> skip;
