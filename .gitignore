@@ -18,3 +18,8 @@ project/plugins/project/
 
 ### IntelliJ ###
 .idea/
+
+### Antlr ###
+src/main/java/minijava/grammar/*.java
+src/main/java/minijava/grammar/*.tokens
+src/main/java/minijava/grammar/*.interp
