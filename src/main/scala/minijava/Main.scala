@@ -8,7 +8,7 @@ object Main {
   def main(args: Array[String]): Unit = {
     parse("""
 class Factorial{
-    public static void main(String[] a){
+    public static io void main(String[] a){
 	System.out.println(new Fac().ComputeFac(10));
     }
 }

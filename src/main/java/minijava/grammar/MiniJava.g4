@@ -2,13 +2,13 @@ grammar MiniJava;
 
 goal : mainClass (classDeclaration)* EOF ;
 
-mainClass : 'class' IDENTIFIER '{' 'public' 'static' 'void' 'main' '(' 'String' '[' ']' IDENTIFIER ')' '{' statement '}' '}' ;
+mainClass : 'class' IDENTIFIER '{' 'public' 'static' ('io')? 'void' 'main' '(' 'String' '[' ']' IDENTIFIER ')' '{' statement '}' '}' ;
 
 classDeclaration : 'class' IDENTIFIER ('extends' IDENTIFIER)? '{' (varDeclaration)* (methodDeclaration*) '}' ;
 
 varDeclaration : type IDENTIFIER ';' ;
 
-methodDeclaration : 'public' type IDENTIFIER '(' (type IDENTIFIER (',' type IDENTIFIER)*)? ')' '{' (varDeclaration)* (statement)* 'return' expression ';' '}' ;
+methodDeclaration : 'public' ('io')? type IDENTIFIER '(' (type IDENTIFIER (',' type IDENTIFIER)*)? ')' '{' (varDeclaration)* (statement)* 'return' expression ';' '}' ;
 
 type :
       'int' '[' ']'
