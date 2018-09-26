@@ -8,6 +8,11 @@ scalaVersion := "2.12.1"
 libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.13.4"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 
+libraryDependencies ++= Seq(
+  "org.antlr" % "antlr4-runtime" % "4.7.1",
+  "org.antlr" % "stringtemplate" % "3.2"
+)
+
 mainClass in Compile := Some("minijava.Main")
 
 // Linting
