@@ -2,7 +2,7 @@ grammar MiniJava;
 
 goal : mainClass (classDeclaration)* EOF ;
 
-mainClass : 'class' IDENTIFIER '{' 'public' 'static' ('io')? 'void' 'main' '(' 'String' '[' ']' IDENTIFIER ')' '{' statement '}' '}' ;
+mainClass : 'class' IDENTIFIER '{' 'public' 'static' io='io'? 'void' 'main' '(' 'String' '[' ']' IDENTIFIER ')' '{' statement '}' '}' ;
 
 classDeclaration : 'class' IDENTIFIER ('extends' IDENTIFIER)? '{' (varDeclaration)* (methodDeclaration*) '}' ;
 
@@ -11,35 +11,35 @@ varDeclaration : type IDENTIFIER ';' ;
 methodDeclaration : 'public' ('io')? type IDENTIFIER '(' (type IDENTIFIER (',' type IDENTIFIER)*)? ')' '{' (varDeclaration)* (statement)* 'return' expression ';' '}' ;
 
 type :
-      'int' '[' ']'
-    | 'boolean'
-    | 'int'
-    | IDENTIFIER
+      'int' '[' ']' # IntArrayType
+    | 'boolean' # BooleanType
+    | 'int' # IntType
+    | IDENTIFIER # IdentifierType
     ;
 
 statement :
-      '{' (statement)* '}'
-    | 'if' '(' expression ')' statement 'else' statement
-    | 'while' '(' expression ')' statement
-    | 'System.out.println' '(' expression ')' ';'
-    | IDENTIFIER '=' expression ';'
-    | IDENTIFIER '[' expression ']' '=' expression ';'
+      '{' (statement)* '}' # StatementBlock
+    | 'if' '(' expression ')' statement 'else' statement # IfStatement
+    | 'while' '(' expression ')' statement # WhileStatement
+    | 'System.out.println' '(' expression ')' ';' # PrintStatement
+    | IDENTIFIER '=' expression ';' # AssignmentStatement
+    | IDENTIFIER '[' expression ']' '=' expression ';' # ArrayAssignmentStatement
     ;
 
 expression :
-      expression (AND | LT | PLUS | MINUS | TIMES) expression
-    | expression '[' expression ']'
-    | expression '.' 'length'
-    | expression '.' IDENTIFIER'(' (expression ( ',' expression )*)? ')'
-    | INTEGER_LITERAL
-    | 'true' 
-    | 'false'
-    | IDENTIFIER
-    | 'this'
-    | 'new' 'int' '[' expression ']'
-    | 'new' IDENTIFIER '(' ')'
-    | NOT expression
-    | '(' expression ')'
+      expression (AND | LT | PLUS | MINUS | TIMES) expression # BinaryOperationExpression
+    | expression '[' expression ']' # ArrayAccessExpression
+    | expression '.' 'length' # ArrayLengthExpression
+    | objectExpression=expression '.' IDENTIFIER'(' (expression ( ',' expression )*)? ')' # MethodCallExpression
+    | INTEGER_LITERAL # IntegerLiteral
+    | 'true' # True
+    | 'false' # False
+    | IDENTIFIER # IdentifierExpression
+    | 'this' # This
+    | 'new' 'int' '[' expression ']' # NewIntArrayExpression
+    | 'new' IDENTIFIER '(' ')' # NewObjectExpression
+    | NOT expression # NegationExpression
+    | '(' expression ')' # ParenedExpression
     ;
 
 IDENTIFIER : [a-zA-Z_]+ ;

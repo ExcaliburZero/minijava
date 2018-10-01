@@ -1,8 +1,8 @@
 package minijava
 
 import org.antlr.v4.runtime._
-
 import minijava.grammar._
+import minijava.parser.MiniJavaVisitorImpl
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -34,8 +34,10 @@ class Fac {
     val tokens = new CommonTokenStream(lexer)
     val parser = new MiniJavaParser(tokens)
 
-	val context = parser.goal
+    val visitor = new MiniJavaVisitorImpl()
 
-	println(context)
+    val ast = visitor.visit(parser.goal)
+
+    println(ast)
   }
 }
