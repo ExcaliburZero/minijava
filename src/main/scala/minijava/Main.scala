@@ -39,5 +39,9 @@ class Fac {
     val ast = visitor.visit(parser.goal)
 
     println(ast)
+
+    println("----------------")
+
+    println(AST.prettyPrint(ast))
   }
 }

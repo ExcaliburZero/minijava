@@ -8,7 +8,7 @@ classDeclaration : 'class' IDENTIFIER ('extends' IDENTIFIER)? '{' (varDeclaratio
 
 varDeclaration : type IDENTIFIER ';' ;
 
-methodDeclaration : 'public' ('io')? type IDENTIFIER '(' (type IDENTIFIER (',' type IDENTIFIER)*)? ')' '{' (varDeclaration)* (statement)* 'return' expression ';' '}' ;
+methodDeclaration : 'public' io='io'? type IDENTIFIER '(' (type IDENTIFIER (',' type IDENTIFIER)*)? ')' '{' (varDeclaration)* (statement)* 'return' expression ';' '}' ;
 
 type :
       'int' '[' ']' # IntArrayType
@@ -27,7 +27,7 @@ statement :
     ;
 
 expression :
-      expression (AND | LT | PLUS | MINUS | TIMES) expression # BinaryOperationExpression
+      expression BINARY_OPERATOR expression # BinaryOperationExpression
     | expression '[' expression ']' # ArrayAccessExpression
     | expression '.' 'length' # ArrayLengthExpression
     | objectExpression=expression '.' IDENTIFIER'(' (expression ( ',' expression )*)? ')' # MethodCallExpression
@@ -44,6 +44,8 @@ expression :
 
 IDENTIFIER : [a-zA-Z_]+ ;
 INTEGER_LITERAL : [0-9]+ ;
+
+BINARY_OPERATOR : AND | LT | PLUS | MINUS | TIMES ;
 
 AND : '&&' ;
 LT : '<' ;
