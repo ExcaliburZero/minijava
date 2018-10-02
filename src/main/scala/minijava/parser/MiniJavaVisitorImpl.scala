@@ -81,8 +81,25 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[ASTNode] {
     MethodDeclaration(isIO, varType, name, parameters, variableDeclarations, statements, returnExpression)
   }
 
+  override def visitIntArrayType(ctx: MiniJavaParser.IntArrayTypeContext): ASTNode = {
+    IntArrayType
+  }
+
+  override def visitBooleanType(ctx: MiniJavaParser.BooleanTypeContext): ASTNode = {
+    BooleanType
+  }
+
   override def visitIntType(ctx: MiniJavaParser.IntTypeContext): ASTNode = {
     IntType
+  }
+
+  override def visitStatementBlock(ctx: MiniJavaParser.StatementBlockContext): ASTNode = {
+    val statements = ctx.statement().toArray
+      .map(
+        _.asInstanceOf[MiniJavaParser.StatementContext].accept(this).asInstanceOf[Statement]
+      ).toList
+
+    StatementBlock(statements)
   }
 
   override def visitIfStatement(ctx: MiniJavaParser.IfStatementContext): ASTNode = {
@@ -91,6 +108,13 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[ASTNode] {
     val elseClause = ctx.statement(1).accept(this).asInstanceOf[Statement]
 
     IfStatement(condition, thenClause, elseClause)
+  }
+
+  override def visitWhileStatement(ctx: MiniJavaParser.WhileStatementContext): ASTNode = {
+    val condition = ctx.expression().accept(this).asInstanceOf[Expression]
+    val statement = ctx.statement().accept(this).asInstanceOf[Statement]
+
+    WhileStatement(condition, statement)
   }
 
   override def visitPrintStatement(ctx: MiniJavaParser.PrintStatementContext): ASTNode = {
@@ -104,6 +128,14 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[ASTNode] {
     val expression = ctx.expression().accept(this).asInstanceOf[Expression]
 
     AssignmentStatement(name, expression)
+  }
+
+  override def visitArrayAssignmentStatement(ctx: MiniJavaParser.ArrayAssignmentStatementContext): ASTNode = {
+    val name = Identifier(ctx.IDENTIFIER().getSymbol.getText)
+    val indexExpression = ctx.expression(0).accept(this).asInstanceOf[Expression]
+    val valueExpression = ctx.expression(1).accept(this).asInstanceOf[Expression]
+
+    ArrayAssignmentStatement(name, indexExpression, valueExpression)
   }
 
   override def visitBinaryOperationExpression(ctx: MiniJavaParser.BinaryOperationExpressionContext): ASTNode = {
@@ -120,6 +152,19 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[ASTNode] {
     val secondExpression = ctx.expression(1).accept(this).asInstanceOf[Expression]
 
     BinaryOperationExpression(firstExpression, operator, secondExpression)
+  }
+
+  override def visitArrayAccessExpression(ctx: MiniJavaParser.ArrayAccessExpressionContext): ASTNode = {
+    val arrayExpression = ctx.expression(0).accept(this).asInstanceOf[Expression]
+    val indexExpression = ctx.expression(1).accept(this).asInstanceOf[Expression]
+
+    ArrayAccessExpression(arrayExpression, indexExpression)
+  }
+
+  override def visitArrayLengthExpression(ctx: MiniJavaParser.ArrayLengthExpressionContext): ASTNode = {
+    val arrayExpression = ctx.expression().accept(this).asInstanceOf[Expression]
+
+    ArrayLengthExpression(arrayExpression)
   }
 
   override def visitMethodCallExpression(ctx: MiniJavaParser.MethodCallExpressionContext): ASTNode = {
@@ -150,6 +195,12 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[ASTNode] {
 
   override def visitThis(ctx: MiniJavaParser.ThisContext): ASTNode = {
     ThisLiteral
+  }
+
+  override def visitNewIntArrayExpression(ctx: MiniJavaParser.NewIntArrayExpressionContext): ASTNode = {
+    val lengthExpression = ctx.expression().accept(this).asInstanceOf[Expression]
+
+    NewIntArrayExpression(lengthExpression)
   }
 
   override def visitNewObjectExpression(ctx: MiniJavaParser.NewObjectExpressionContext): ASTNode = {

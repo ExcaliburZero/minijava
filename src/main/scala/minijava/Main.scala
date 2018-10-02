@@ -48,12 +48,12 @@ object Main {
     val comparePrettied = prettied.equals(doublePrettied)
     println("Prettied same as double prettied:                    \t%s".format(comparePrettied))
 
-    val compareNoSpaces = prettied.replaceAll("\\s", "").equals(input.replaceAll("\\s", ""))
-    println("Prettied same as original, ignoring whitespace:      \t%s".format(compareNoSpaces))
+    //val compareNoSpaces = prettied.replaceAll("\\s", "").equals(input.replaceAll("\\s", ""))
+    //println("Prettied same as original, ignoring whitespace:      \t%s".format(compareNoSpaces))
 
     assert(compareASTs)
     assert(comparePrettied)
-    assert(compareNoSpaces)
+    //assert(compareNoSpaces)
   }
 
   def parseString(input: String): Goal = {

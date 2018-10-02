@@ -20,7 +20,7 @@ case object IntType extends Type
 sealed trait Statement extends ASTNode
 case class StatementBlock(statements: List[Statement]) extends Statement
 case class IfStatement(condition: Expression, thenClause: Statement, elseClause: Statement) extends Statement
-case class WhileStatement(condition: Expression, statements: Statement) extends Statement
+case class WhileStatement(condition: Expression, statement: Statement) extends Statement
 case class PrintStatement(expression: Expression) extends Statement
 case class AssignmentStatement(name: Identifier, expression: Expression) extends Statement
 case class ArrayAssignmentStatement(name: Identifier, indexExpression: Expression, valueExpression: Expression) extends Statement
@@ -136,7 +136,18 @@ object AST {
 
         sb.append("%s}\n".format(indent))
       }
+      case IntArrayType => sb.append("int[]")
+      case BooleanType => sb.append("boolean")
       case IntType => sb.append("int")
+      case StatementBlock(statements) => {
+        sb.append("%s{\n".format(indent))
+
+        statements.foreach(s => {
+          prettyPrint(s, sb, indentLevel + 1)
+        })
+
+        sb.append("%s}\n".format(indent))
+      }
       case IfStatement(condition, thenClause, elseClause) => {
         sb.append("%sif (".format(indent))
 
@@ -152,6 +163,15 @@ object AST {
 
         sb.append("\n")
       }
+      case WhileStatement(condition, statement) => {
+        sb.append("%swhile(".format(indent))
+
+        prettyPrint(condition, sb, indentLevel)
+
+        sb.append(")\n")
+
+        prettyPrint(statement, sb, indentLevel + 1)
+      }
       case PrintStatement(expression) => {
         sb.append("%sSystem.out.println(".format(indent))
 
@@ -163,6 +183,17 @@ object AST {
         sb.append("%s%s = ".format(indent, name.name))
 
         prettyPrint(expression, sb, indentLevel)
+
+        sb.append(";\n")
+      }
+      case ArrayAssignmentStatement(name, indexExpression, valueExpression) => {
+        sb.append("%s%s[".format(indent, name.name))
+
+        prettyPrint(indexExpression, sb, indentLevel)
+
+        sb.append("] = ")
+
+        prettyPrint(valueExpression, sb, indentLevel)
 
         sb.append(";\n")
       }
@@ -181,6 +212,20 @@ object AST {
 
         prettyPrint(secondExpression, sb, indentLevel)
       }
+      case ArrayAccessExpression(arrayExpression, indexExpression) => {
+        prettyPrint(arrayExpression, sb, indentLevel)
+
+        sb.append("[")
+
+        prettyPrint(indexExpression, sb, indentLevel)
+
+        sb.append("]")
+      }
+      case ArrayLengthExpression(arrayExpression) => {
+        prettyPrint(arrayExpression, sb, indentLevel)
+
+        sb.append(".length")
+      }
       case MethodCallExpression(objectExpression, methodName, parameters) => {
         prettyPrint(objectExpression, sb, indentLevel)
 
@@ -196,8 +241,17 @@ object AST {
         sb.append(")")
       }
       case IntegerLiteral(value) => sb.append(value)
+      case TrueLiteral => sb.append("true")
+      case FalseLiteral => sb.append("false")
       case IdentifierExpression(identifier) => sb.append(identifier.name)
       case ThisLiteral => sb.append("this")
+      case NewIntArrayExpression(lengthExpression) => {
+        sb.append("new int[")
+
+        prettyPrint(lengthExpression, sb, indentLevel)
+
+        sb.append("]")
+      }
       case NewObjectExpression(className) => {
         sb.append("new %s()".format(className.name))
       }
