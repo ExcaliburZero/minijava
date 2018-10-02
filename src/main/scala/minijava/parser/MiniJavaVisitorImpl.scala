@@ -115,7 +115,6 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[ASTNode] {
       case "+" => Plus
       case "-" => Minus
       case "*" => Times
-      case "!" => Not
     }
 
     val secondExpression = ctx.expression(1).accept(this).asInstanceOf[Expression]
@@ -155,5 +154,11 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[ASTNode] {
 
   override def visitNewObjectExpression(ctx: MiniJavaParser.NewObjectExpressionContext): ASTNode = {
     NewObjectExpression(Identifier(ctx.IDENTIFIER().getSymbol.getText))
+  }
+
+  override def visitParenedExpression(ctx: MiniJavaParser.ParenedExpressionContext): ASTNode = {
+    val expression = ctx.expression().accept(this).asInstanceOf[Expression]
+
+    ParenedExpression(expression)
   }
 }

@@ -37,7 +37,8 @@ case class IdentifierExpression(name: Identifier) extends Expression
 case object ThisLiteral extends Expression
 case class NewIntArrayExpression(lengthExpression: Expression) extends Expression
 case class NewObjectExpression(className: Identifier) extends Expression
-// TODO: more
+case class NegatedExpression(expression: Expression) extends Expression
+case class ParenedExpression(expression: Expression) extends Expression
 
 sealed trait BinaryOperator
 case object And extends BinaryOperator
@@ -45,7 +46,6 @@ case object LessThan extends BinaryOperator
 case object Plus extends BinaryOperator
 case object Minus extends BinaryOperator
 case object Times extends BinaryOperator
-case object Not extends BinaryOperator
 
 case class Identifier(name: String) extends Type
 
@@ -65,11 +65,10 @@ object AST {
     node match {
       case Goal(mainClass, classDeclarations) => {
         prettyPrint(mainClass, sb, indentLevel)
-        sb.append("\n")
 
         classDeclarations.foreach(cd => {
-          prettyPrint(cd, sb, indentLevel)
           sb.append("\n")
+          prettyPrint(cd, sb, indentLevel)
         })
       }
       case MainClass(name, isIO, parameter, statement) => {
@@ -97,6 +96,13 @@ object AST {
 
         sb.append("}\n")
       }
+      case VariableDeclaration(varType, name) => {
+        sb.append(indent)
+
+        prettyPrint(varType, sb, indentLevel)
+
+        sb.append(" %s;\n".format(name.name))
+      }
       case MethodDeclaration(isIO, varType, name, parameters, variableDeclarations, statements, returnExpression) => {
         sb.append("%spublic ".format(indent))
 
@@ -121,15 +127,59 @@ object AST {
 
         sb.append(") {\n")
 
+        variableDeclarations.foreach(prettyPrint(_, sb, indentLevel + 1))
+        statements.foreach(prettyPrint(_, sb, indentLevel + 1))
+
+        sb.append("%sreturn ".format(indent + INDENT))
+        prettyPrint(returnExpression, sb, indentLevel)
+        sb.append(";\n")
+
         sb.append("%s}\n".format(indent))
       }
       case IntType => sb.append("int")
+      case IfStatement(condition, thenClause, elseClause) => {
+        sb.append("%sif (".format(indent))
+
+        prettyPrint(condition, sb, indentLevel)
+
+        sb.append(")\n")
+
+        prettyPrint(thenClause, sb, indentLevel + 1)
+
+        sb.append("%selse\n".format(indent))
+
+        prettyPrint(elseClause, sb, indentLevel + 1)
+
+        sb.append("\n")
+      }
       case PrintStatement(expression) => {
         sb.append("%sSystem.out.println(".format(indent))
 
         prettyPrint(expression, sb, indentLevel)
 
         sb.append(");\n")
+      }
+      case AssignmentStatement(name, expression) => {
+        sb.append("%s%s = ".format(indent, name.name))
+
+        prettyPrint(expression, sb, indentLevel)
+
+        sb.append(";\n")
+      }
+      case BinaryOperationExpression(firstExpression, operator, secondExpression) => {
+        val operatorString = operator match {
+          case And => "&&"
+          case LessThan => "<"
+          case Plus => "+"
+          case Minus => "-"
+          case Times => "*"
+        }
+
+        prettyPrint(firstExpression, sb, indentLevel)
+
+        sb.append(" %s ".format(operatorString))
+
+        prettyPrint(secondExpression, sb, indentLevel)
       }
       case MethodCallExpression(objectExpression, methodName, parameters) => {
         prettyPrint(objectExpression, sb, indentLevel)
@@ -146,8 +196,17 @@ object AST {
         sb.append(")")
       }
       case IntegerLiteral(value) => sb.append(value)
+      case IdentifierExpression(identifier) => sb.append(identifier.name)
+      case ThisLiteral => sb.append("this")
       case NewObjectExpression(className) => {
         sb.append("new %s()".format(className.name))
+      }
+      case ParenedExpression(expression) => {
+        sb.append("(")
+
+        prettyPrint(expression, sb, indentLevel)
+
+        sb.append(")")
       }
       case _ => sb.append("TODO")
     }
