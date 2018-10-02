@@ -42,7 +42,7 @@ expression :
     | '(' expression ')' # ParenedExpression
     ;
 
-IDENTIFIER : [a-zA-Z_]+ ;
+IDENTIFIER : [a-zA-Z_]+[a-zA-Z_0-9]* ;
 INTEGER_LITERAL : [0-9]+ ;
 
 BINARY_OPERATOR : AND | LT | PLUS | MINUS | TIMES ;
@@ -55,3 +55,4 @@ TIMES : '*' ;
 NOT : '!';
 
 WS: [ \n\t\r]+ -> skip;
+COMMENT : '//' .+? ('\n'|EOF) -> skip ;

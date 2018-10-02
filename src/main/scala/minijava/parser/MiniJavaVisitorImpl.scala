@@ -62,9 +62,9 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[ASTNode] {
     val varType = ctx.`type`(0).accept(this).asInstanceOf[Type]
     val name = Identifier(ctx.IDENTIFIER(0).getSymbol.getText)
 
-    val paramTypes = ctx.`type`().toArray.tail
+    val paramTypes = ctx.`type`().toArray.drop(1)
       .map(_.asInstanceOf[MiniJavaParser.TypeContext].accept(this).asInstanceOf[Type])
-    val paramNames = ctx.IDENTIFIER().toArray.tail
+    val paramNames = ctx.IDENTIFIER().toArray.drop(1)
       .map(i => Identifier(i.asInstanceOf[TerminalNode].getSymbol.getText))
 
     val parameters = paramTypes.zip(paramNames).toList
@@ -125,7 +125,7 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[ASTNode] {
   override def visitMethodCallExpression(ctx: MiniJavaParser.MethodCallExpressionContext): ASTNode = {
     val objectExpression = ctx.objectExpression.accept(this).asInstanceOf[Expression]
     val methodName = Identifier(ctx.IDENTIFIER().getSymbol.getText)
-    val parameters = ctx.expression().toArray().tail
+    val parameters = ctx.expression().toArray().drop(1)
       .map(_.asInstanceOf[MiniJavaParser.ExpressionContext].accept(this).asInstanceOf[Expression])
       .toList
 

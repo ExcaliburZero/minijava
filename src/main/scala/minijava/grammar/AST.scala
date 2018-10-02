@@ -117,7 +117,7 @@ object AST {
 
           sb.append(" %s".format(v._2.name))
         })
-        parameters.tail.foreach(v => {
+        parameters.drop(1).foreach(v => {
           sb.append(", ")
 
           prettyPrint(v._1, sb, indentLevel)
@@ -187,7 +187,7 @@ object AST {
         sb.append(".%s(".format(methodName.name))
 
         parameters.headOption.foreach(prettyPrint(_, sb, indentLevel))
-        parameters.tail.foreach(p => {
+        parameters.drop(1).foreach(p => {
           sb.append(", ")
 
           prettyPrint(p, sb, indentLevel)
