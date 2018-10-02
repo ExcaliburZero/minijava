@@ -255,6 +255,11 @@ object AST {
       case NewObjectExpression(className) => {
         sb.append("new %s()".format(className.name))
       }
+      case NegatedExpression(expression) => {
+        sb.append("!")
+
+        prettyPrint(expression, sb, indentLevel)
+      }
       case ParenedExpression(expression) => {
         sb.append("(")
 

@@ -207,6 +207,12 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[ASTNode] {
     NewObjectExpression(Identifier(ctx.IDENTIFIER().getSymbol.getText))
   }
 
+  override def visitNegationExpression(ctx: MiniJavaParser.NegationExpressionContext): ASTNode = {
+    val expression = ctx.expression().accept(this).asInstanceOf[Expression]
+
+    NegatedExpression(expression)
+  }
+
   override def visitParenedExpression(ctx: MiniJavaParser.ParenedExpressionContext): ASTNode = {
     val expression = ctx.expression().accept(this).asInstanceOf[Expression]
 

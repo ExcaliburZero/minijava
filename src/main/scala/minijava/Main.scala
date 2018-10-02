@@ -43,17 +43,29 @@ object Main {
     println("----------------")
 
     val compareASTs = ast.equals(prettiedAst)
-    println("AST from prettied same as non-prettied:              \t%s".format(compareASTs))
+    println("AST from prettied same as non-prettied:                     \t%s".format(compareASTs))
 
     val comparePrettied = prettied.equals(doublePrettied)
-    println("Prettied same as double prettied:                    \t%s".format(comparePrettied))
+    println("Prettied same as double prettied:                           \t%s".format(comparePrettied))
 
-    //val compareNoSpaces = prettied.replaceAll("\\s", "").equals(input.replaceAll("\\s", ""))
-    //println("Prettied same as original, ignoring whitespace:      \t%s".format(compareNoSpaces))
+    val originalNoSpacesOrComments = input
+      .split("\n")
+      .filter(!_.contains("//"))
+      .mkString("\n")
+      .replaceAll("\\s", "")
+    val prettiedNoSpaces = prettied.replaceAll("\\s", "")
+
+    val compareNoSpaces = prettiedNoSpaces.equals(originalNoSpacesOrComments)
+    println("Prettied same as original, ignoring whitespace + comments:  \t%s".format(compareNoSpaces))
+
+    if (!compareNoSpaces) {
+      println("diff:")
+      println("\"%s\"".format(originalNoSpacesOrComments.diff(prettiedNoSpaces)))
+    }
 
     assert(compareASTs)
     assert(comparePrettied)
-    //assert(compareNoSpaces)
+    assert(compareNoSpaces)
   }
 
   def parseString(input: String): Goal = {
