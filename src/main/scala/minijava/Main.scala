@@ -61,6 +61,8 @@ object Main {
     if (!compareNoSpaces) {
       println("diff:")
       println("\"%s\"".format(originalNoSpacesOrComments.diff(prettiedNoSpaces)))
+      println("diff (op):")
+      println("\"%s\"".format(prettiedNoSpaces.diff(originalNoSpacesOrComments)))
     }
 
     assert(compareASTs)

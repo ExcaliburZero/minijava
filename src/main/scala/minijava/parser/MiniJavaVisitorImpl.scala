@@ -183,10 +183,6 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[ASTNode] {
     MethodCallExpression(objectExpression, methodName, parameters)
   }
 
-  override def visitIdentifierExpression(ctx: MiniJavaParser.IdentifierExpressionContext): ASTNode = {
-    IdentifierExpression(Identifier(ctx.IDENTIFIER().getSymbol.getText))
-  }
-
   override def visitIntegerLiteral(ctx: MiniJavaParser.IntegerLiteralContext): ASTNode = {
     IntegerLiteral(Integer.parseInt(ctx.INTEGER_LITERAL().getSymbol.getText))
   }
@@ -197,6 +193,10 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[ASTNode] {
 
   override def visitFalse(ctx: MiniJavaParser.FalseContext): ASTNode = {
     FalseLiteral
+  }
+
+  override def visitIdentifierExpression(ctx: MiniJavaParser.IdentifierExpressionContext): ASTNode = {
+    IdentifierExpression(Identifier(ctx.IDENTIFIER().getSymbol.getText))
   }
 
   override def visitThis(ctx: MiniJavaParser.ThisContext): ASTNode = {
