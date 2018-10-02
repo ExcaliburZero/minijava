@@ -93,6 +93,12 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[ASTNode] {
     IntType
   }
 
+  override def visitIdentifierType(ctx: MiniJavaParser.IdentifierTypeContext): ASTNode = {
+    val name = Identifier(ctx.IDENTIFIER().getSymbol.getText)
+
+    IdentifierType(name)
+  }
+
   override def visitStatementBlock(ctx: MiniJavaParser.StatementBlockContext): ASTNode = {
     val statements = ctx.statement().toArray
       .map(

@@ -16,6 +16,7 @@ sealed trait Type extends ASTNode
 case object IntArrayType extends Type
 case object BooleanType extends Type
 case object IntType extends Type
+case class IdentifierType(name: Identifier) extends Type
 
 sealed trait Statement extends ASTNode
 case class StatementBlock(statements: List[Statement]) extends Statement
@@ -47,7 +48,7 @@ case object Plus extends BinaryOperator
 case object Minus extends BinaryOperator
 case object Times extends BinaryOperator
 
-case class Identifier(name: String) extends Type
+case class Identifier(name: String)
 
 object AST {
   private val INDENT = "    "
@@ -87,7 +88,7 @@ object AST {
       case ClassDeclaration(name, parentClass, variableDeclarations, methodDeclarations) => {
         sb.append("class %s ".format(name.name))
 
-        parentClass.foreach("extends %s".format(_))
+        parentClass.foreach(p => sb.append("extends %s".format(p.name)))
 
         sb.append("{\n")
 
@@ -139,6 +140,7 @@ object AST {
       case IntArrayType => sb.append("int[]")
       case BooleanType => sb.append("boolean")
       case IntType => sb.append("int")
+      case IdentifierType(name) => sb.append(name.name)
       case StatementBlock(statements) => {
         sb.append("%s{\n".format(indent))
 
