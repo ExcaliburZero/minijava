@@ -5,7 +5,8 @@ import java.nio.file.{Files, Paths}
 
 import org.antlr.v4.runtime._
 import minijava.grammar._
-import minijava.parser.MiniJavaVisitorImpl
+import minijava.messages.CompilerMessage
+import minijava.parser.{MiniJavaVisitorImpl, ParseErrorListener, ParserErrorStrategy}
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -15,7 +16,14 @@ object Main {
 
     val input = readFile(filepath)
 
-    val ast = parseString(input)
+    val ast = (parseString(input) match {
+      case Right(a) => a
+      case Left(errors) =>
+        errors.foreach(e => println(e.toDisplayString()))
+
+        println("\n%d error(s)".format(errors.length))
+        System.exit(1)
+    }).asInstanceOf[Goal]
 
     println("----------------")
     println("|   Original   |")
@@ -36,7 +44,14 @@ object Main {
     println("|   Re-Pretty  |")
     println("----------------")
 
-    val prettiedAst = parseString(prettied)
+    val prettiedAst = (parseString(prettied) match {
+      case Right(a) => a
+      case Left(errors) =>
+        errors.foreach(e => println(e.toDisplayString()))
+
+        println("\n%d error(s)".format(errors.length))
+        System.exit(1)
+    }).asInstanceOf[Goal]
     val doublePrettied = AST.prettyPrint(prettiedAst)
     println(doublePrettied)
 
@@ -70,20 +85,31 @@ object Main {
     assert(compareNoSpaces)
   }
 
-  def parseString(input: String): Goal = {
+  def parseString(input: String): Either[List[CompilerMessage], Goal] = {
     val charStream = CharStreams.fromString(input)
 
     parse(charStream)
   }
 
-  def parse(charStream: CharStream): Goal = {
+  def parse(charStream: CharStream): Either[List[CompilerMessage], Goal] = {
     val lexer = new MiniJavaLexer(charStream)
+
+    val listener = new ParseErrorListener()
     val tokens = new CommonTokenStream(lexer)
     val parser = new MiniJavaParser(tokens)
 
+    parser.removeErrorListeners()
+    parser.addErrorListener(listener)
+
     val visitor = new MiniJavaVisitorImpl()
 
-    visitor.visit(parser.goal).asInstanceOf[Goal]
+    val goal = visitor.visit(parser.goal).asInstanceOf[Goal]
+
+    if (listener.getErrors().nonEmpty) {
+      Left(listener.getErrors())
+    } else {
+      Right(goal)
+    }
   }
 
   def readFile(filepath: String): String = {

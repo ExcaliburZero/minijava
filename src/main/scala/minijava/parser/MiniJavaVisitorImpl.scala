@@ -1,7 +1,7 @@
 package minijava.parser
 
 import minijava.grammar._
-import org.antlr.v4.runtime.tree.TerminalNode
+import org.antlr.v4.runtime.tree.{ErrorNode, TerminalNode}
 
 class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[ASTNode] {
   override def visitGoal(ctx: MiniJavaParser.GoalContext): ASTNode = {
