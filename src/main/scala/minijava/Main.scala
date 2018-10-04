@@ -19,19 +19,57 @@ object Main {
     val ast = (parseString(input) match {
       case Right(a) => a
       case Left(errors) =>
-        errors.foreach(e => println(e.toDisplayString()))
-
-        val numErrors = errors.count(_.kind == CompilerError)
-        val numWarnings = errors.count(_.kind == CompilerWarning)
-
-        val errorsMsg = if (numErrors > 0) "\n%s%d error(s)%s".format(Console.RED, numErrors, Console.RESET) else ""
-        val warningsMsg = if (numWarnings > 0) "\n%s%d warnings(s)%s".format(Console.YELLOW, numWarnings, Console.RESET) else ""
-
-        println(errorsMsg + warningsMsg)
-
+        printParserErrors(errors)
         System.exit(1)
     }).asInstanceOf[Goal]
 
+    checkASTAndPrettied(ast, input)
+  }
+
+  def parseString(input: String): Either[List[CompilerMessage], Goal] = {
+    val charStream = CharStreams.fromString(input)
+
+    parse(charStream)
+  }
+
+  def parse(charStream: CharStream): Either[List[CompilerMessage], Goal] = {
+    val lexer = new MiniJavaLexer(charStream)
+
+    val listener = new ParseErrorListener()
+    val tokens = new CommonTokenStream(lexer)
+    val parser = new MiniJavaParser(tokens)
+
+    parser.removeErrorListeners()
+    parser.addErrorListener(listener)
+
+    val visitor = new MiniJavaVisitorImpl()
+
+    val goal = visitor.visit(parser.goal).asInstanceOf[Goal]
+
+    if (listener.getErrors().nonEmpty) {
+      Left(listener.getErrors())
+    } else {
+      Right(goal)
+    }
+  }
+
+  def readFile(filepath: String): String = {
+    new String(Files.readAllBytes(Paths.get(filepath)), StandardCharsets.UTF_8)
+  }
+
+  def printParserErrors(errors: List[CompilerMessage]): Unit = {
+    errors.foreach(e => println(e.toDisplayString()))
+
+    val numErrors = errors.count(_.kind == CompilerError)
+    val numWarnings = errors.count(_.kind == CompilerWarning)
+
+    val errorsMsg = if (numErrors > 0) "\n%s%d error(s)%s".format(Console.RED, numErrors, Console.RESET) else ""
+    val warningsMsg = if (numWarnings > 0) "\n%s%d warnings(s)%s".format(Console.YELLOW, numWarnings, Console.RESET) else ""
+
+    println(errorsMsg + warningsMsg)
+  }
+
+  def checkASTAndPrettied(ast: Goal, input: String): Unit = {
     println("----------------")
     println("|   Original   |")
     println("----------------")
@@ -54,9 +92,7 @@ object Main {
     val prettiedAst = (parseString(prettied) match {
       case Right(a) => a
       case Left(errors) =>
-        errors.foreach(e => println(e.toDisplayString()))
-
-        println("\n%d error(s)".format(errors.length))
+        printParserErrors(errors)
         System.exit(1)
     }).asInstanceOf[Goal]
     val doublePrettied = AST.prettyPrint(prettiedAst)
@@ -90,36 +126,5 @@ object Main {
     assert(compareASTs)
     assert(comparePrettied)
     assert(compareNoSpaces)
-  }
-
-  def parseString(input: String): Either[List[CompilerMessage], Goal] = {
-    val charStream = CharStreams.fromString(input)
-
-    parse(charStream)
-  }
-
-  def parse(charStream: CharStream): Either[List[CompilerMessage], Goal] = {
-    val lexer = new MiniJavaLexer(charStream)
-
-    val listener = new ParseErrorListener()
-    val tokens = new CommonTokenStream(lexer)
-    val parser = new MiniJavaParser(tokens)
-
-    parser.removeErrorListeners()
-    parser.addErrorListener(listener)
-
-    val visitor = new MiniJavaVisitorImpl()
-
-    val goal = visitor.visit(parser.goal).asInstanceOf[Goal]
-
-    if (listener.getErrors().nonEmpty) {
-      Left(listener.getErrors())
-    } else {
-      Right(goal)
-    }
-  }
-
-  def readFile(filepath: String): String = {
-    new String(Files.readAllBytes(Paths.get(filepath)), StandardCharsets.UTF_8)
   }
 }
