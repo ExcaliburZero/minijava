@@ -8,6 +8,11 @@ case object CompilerError extends MessageKind
 case object CompilerWarning extends MessageKind
 
 case class CompilerMessage(kind: MessageKind, source: MessageSource, line: Int, column: Int, message: String) {
+  /**
+    * Returns a pretty formatted string version of the CompilerMessage.
+    *
+    * @return A string representation of the CompilerMessage.
+    */
   def toDisplayString(): String = {
     val display = new StringBuilder()
 
