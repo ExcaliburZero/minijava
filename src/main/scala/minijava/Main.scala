@@ -72,9 +72,9 @@ object Main {
 
     val originalNoSpacesOrComments = input
       .split("\n")
-      .filter(!_.contains("//"))
-      .mkString("\n")
-      .replaceAll("\\s", "")
+      .map(l => l.split("//").head) // Remove comments
+      .mkString("")
+      .replaceAll("\\s", "")    // Remove whitespace
     val prettiedNoSpaces = prettied.replaceAll("\\s", "")
 
     val compareNoSpaces = prettiedNoSpaces.equals(originalNoSpacesOrComments)
