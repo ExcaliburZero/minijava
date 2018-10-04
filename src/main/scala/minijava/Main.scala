@@ -10,7 +10,11 @@ import minijava.parser.{MiniJavaVisitorImpl, ParseErrorListener}
 
 object Main {
   def main(args: Array[String]): Unit = {
-    assert(args.length > 0)
+    if (args.length < 1) {
+      println("%s[error]%s No source file provided. I don't know which file to compile.\n".format(Console.RED, Console.RESET))
+      println("Be sure to provide the source file to compile as the first command line argument.")
+      System.exit(1)
+    }
 
     val filepath = args.head
 
