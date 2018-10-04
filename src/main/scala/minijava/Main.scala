@@ -74,7 +74,7 @@ object Main {
   }
 
   def checkASTAndPrettied(ast: Goal, input: String): Unit = {
-    println("----------------")
+    /*println("----------------")
     println("|   Original   |")
     println("----------------")
     println(input)
@@ -84,14 +84,14 @@ object Main {
     println(ast)
     println("----------------")
     println("|    Pretty    |")
-    println("----------------")
+    println("----------------")*/
 
     val prettied = AST.prettyPrint(ast)
-    println(prettied)
+    /*println(prettied)
 
     println("----------------")
     println("|   Re-Pretty  |")
-    println("----------------")
+    println("----------------")*/
 
     val prettiedAst = (parseString(prettied) match {
       case Right(a) => a
@@ -100,9 +100,9 @@ object Main {
         System.exit(1)
     }).asInstanceOf[Goal]
     val doublePrettied = AST.prettyPrint(prettiedAst)
-    println(doublePrettied)
+    /*println(doublePrettied)
 
-    println("----------------")
+    println("----------------")*/
 
     val compareASTs = ast.equals(prettiedAst)
     println("AST from prettied same as non-prettied:                     \t%s".format(compareASTs))
