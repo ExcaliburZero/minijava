@@ -5,6 +5,7 @@ case object ParsingError extends MessageSource
 
 sealed trait MessageKind
 case object CompilerError extends MessageKind
+case object CompilerWarning extends MessageKind
 
 case class CompilerMessage(kind: MessageKind, source: MessageSource, line: Int, column: Int, message: String) {
   def toDisplayString(): String = {
@@ -17,6 +18,7 @@ case class CompilerMessage(kind: MessageKind, source: MessageSource, line: Int, 
 
     val kindOutput = kind match {
       case CompilerError => "%s[error] %s".format(Console.RED, Console.RESET)
+      case CompilerWarning => "%s[warning] %s".format(Console.YELLOW, Console.RESET)
     }
     display.append(kindOutput)
 

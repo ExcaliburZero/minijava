@@ -5,8 +5,8 @@ import java.nio.file.{Files, Paths}
 
 import org.antlr.v4.runtime._
 import minijava.grammar._
-import minijava.messages.CompilerMessage
-import minijava.parser.{MiniJavaVisitorImpl, ParseErrorListener, ParserErrorStrategy}
+import minijava.messages.{CompilerError, CompilerMessage, CompilerWarning}
+import minijava.parser.{MiniJavaVisitorImpl, ParseErrorListener}
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -21,7 +21,14 @@ object Main {
       case Left(errors) =>
         errors.foreach(e => println(e.toDisplayString()))
 
-        println("\n%d error(s)".format(errors.length))
+        val numErrors = errors.count(_.kind == CompilerError)
+        val numWarnings = errors.count(_.kind == CompilerWarning)
+
+        val errorsMsg = if (numErrors > 0) "\n%s%d error(s)%s".format(Console.RED, numErrors, Console.RESET) else ""
+        val warningsMsg = if (numWarnings > 0) "\n%s%d warnings(s)%s".format(Console.YELLOW, numWarnings, Console.RESET) else ""
+
+        println(errorsMsg + warningsMsg)
+
         System.exit(1)
     }).asInstanceOf[Goal]
 
