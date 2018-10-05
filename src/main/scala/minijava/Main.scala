@@ -48,12 +48,12 @@ object Main {
 
     val visitor = new MiniJavaVisitorImpl()
 
-    val goal = visitor.visit(parser.goal).asInstanceOf[Goal]
+    val goal = visitor.visit(parser.goal).asInstanceOf[Option[Goal]]
 
     if (listener.getErrors().nonEmpty) {
       Left(listener.getErrors())
     } else {
-      Right(goal)
+      Right(goal.get)
     }
   }
 

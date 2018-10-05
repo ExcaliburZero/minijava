@@ -13,6 +13,8 @@ libraryDependencies ++= Seq(
   "org.antlr" % "stringtemplate" % "3.2"
 )
 
+libraryDependencies += "org.scalaz" % "scalaz-core_2.10" % "7.2.26"
+
 mainClass in Compile := Some("minijava.Main")
 
 // Linting
