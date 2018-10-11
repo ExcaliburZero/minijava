@@ -2,12 +2,16 @@ package minijava.messages
 
 sealed trait MessageSource
 case object ParsingError extends MessageSource
+case object TypeCheckingError extends MessageSource
 
 sealed trait MessageKind
 case object CompilerError extends MessageKind
 case object CompilerWarning extends MessageKind
 
-case class CompilerMessage(kind: MessageKind, source: MessageSource, line: Int, column: Int, message: String) {
+sealed trait Location
+case class LineColumn(line: Int, column: Int) extends Location
+
+case class CompilerMessage(kind: MessageKind, source: MessageSource, location: Option[Location], message: String) {
   /**
     * Returns a pretty formatted string version of the CompilerMessage.
     *
@@ -18,6 +22,7 @@ case class CompilerMessage(kind: MessageKind, source: MessageSource, line: Int, 
 
     val sourceOutput = source match {
       case ParsingError => "%s[parsing/lexing] %s".format(Console.YELLOW, Console.RESET)
+      case TypeCheckingError => "%s[type checking] %s".format(Console.BLUE, Console.RESET)
     }
     display.append(sourceOutput)
 
@@ -27,7 +32,11 @@ case class CompilerMessage(kind: MessageKind, source: MessageSource, line: Int, 
     }
     display.append(kindOutput)
 
-    display.append("ln:%d col:%d ".format(line, column))
+    location match {
+      case Some(LineColumn(line, column)) =>
+        display.append("ln:%d col:%d ".format(line, column))
+      case None => ()
+    }
 
     display.append("- ")
 

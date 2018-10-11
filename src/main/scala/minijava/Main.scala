@@ -7,6 +7,7 @@ import org.antlr.v4.runtime._
 import minijava.grammar._
 import minijava.messages.{CompilerError, CompilerMessage, CompilerWarning}
 import minijava.parser.{MiniJavaVisitorImpl, ParseErrorListener}
+import minijava.typechecking.{TypeChecking, TypeTable}
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -23,11 +24,20 @@ object Main {
     val ast = (parseString(input) match {
       case Right(a) => a
       case Left(errors) =>
-        printParserErrors(errors)
+        printErrors(errors)
         System.exit(1)
     }).asInstanceOf[Goal]
 
-    checkASTAndPrettied(ast, input)
+    //checkASTAndPrettied(ast, input)
+
+    val typeTable = (TypeChecking.typeCheck(ast) match {
+      case Right(t) => t
+      case Left(errors) =>
+        printErrors(errors)
+        System.exit(1)
+    }).asInstanceOf[TypeTable]
+
+    println(typeTable)
   }
 
   def parseString(input: String): Either[List[CompilerMessage], Goal] = {
@@ -61,7 +71,7 @@ object Main {
     new String(Files.readAllBytes(Paths.get(filepath)), StandardCharsets.UTF_8)
   }
 
-  def printParserErrors(errors: List[CompilerMessage]): Unit = {
+  def printErrors(errors: List[CompilerMessage]): Unit = {
     errors.foreach(e => println(e.toDisplayString()))
 
     val numErrors = errors.count(_.kind == CompilerError)
@@ -96,7 +106,7 @@ object Main {
     val prettiedAst = (parseString(prettied) match {
       case Right(a) => a
       case Left(errors) =>
-        printParserErrors(errors)
+        printErrors(errors)
         System.exit(1)
     }).asInstanceOf[Goal]
     val doublePrettied = AST.prettyPrint(prettiedAst)
