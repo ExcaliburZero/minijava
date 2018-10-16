@@ -10,6 +10,7 @@ case object CompilerWarning extends MessageKind
 
 sealed trait Location
 case class LineColumn(line: Int, column: Int) extends Location
+case class LineNumber(line: Int) extends Location
 
 case class CompilerMessage(kind: MessageKind, source: MessageSource, location: Option[Location], message: String) {
   /**
@@ -35,6 +36,8 @@ case class CompilerMessage(kind: MessageKind, source: MessageSource, location: O
     location match {
       case Some(LineColumn(line, column)) =>
         display.append("ln:%d col:%d ".format(line, column))
+      case Some(LineNumber(line)) =>
+        display.append("ln:%d ".format(line))
       case None => ()
     }
 

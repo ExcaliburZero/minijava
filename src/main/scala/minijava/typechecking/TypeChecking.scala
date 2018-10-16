@@ -8,11 +8,7 @@ object TypeChecking {
     val (typeTable, duplicateTypeErrors) = extractTypeTable(ast)
 
     if (duplicateTypeErrors.nonEmpty) {
-      return Left(duplicateTypeErrors.map(e => {
-        val message = "Duplicate declaration of class \"%s\"".format(e.typeName)
-
-        CompilerMessage(CompilerError, TypeCheckingError, None, message)
-      }))
+      return Left(duplicateTypeErrors)
     }
 
     println(typeTable)
@@ -20,7 +16,7 @@ object TypeChecking {
     ???
   }
 
-  def extractTypeTable(ast: Goal): (TypeTable, List[TypeAlreadyExistsError]) = {
+  def extractTypeTable(ast: Goal): (TypeTable, List[CompilerMessage]) = {
     val typeExtractionVisitor = new TypeExtractionVisitor()
 
     typeExtractionVisitor.visitGoal(ast, ())

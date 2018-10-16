@@ -4,9 +4,9 @@ sealed trait ASTNode
 
 case class Goal(mainClass: MainClass, classDeclarations: List[ClassDeclaration]) extends ASTNode
 
-case class MainClass(name: Identifier, isIO: Boolean, parameter: Identifier, statement: Statement) extends ASTNode
+case class MainClass(name: Identifier, isIO: Boolean, parameter: Identifier, statement: Statement, line: Int) extends ASTNode
 
-case class ClassDeclaration(name: Identifier, parentClass: Option[Identifier], variableDeclarations: List[VariableDeclaration], methodDeclarations: List[MethodDeclaration]) extends ASTNode
+case class ClassDeclaration(name: Identifier, parentClass: Option[Identifier], variableDeclarations: List[VariableDeclaration], methodDeclarations: List[MethodDeclaration], line: Int) extends ASTNode
 
 case class VariableDeclaration(varType: Type, name: Identifier) extends ASTNode
 
@@ -72,7 +72,7 @@ object AST {
           prettyPrint(cd, sb, indentLevel)
         })
       }
-      case MainClass(name, isIO, parameter, statement) => {
+      case MainClass(name, isIO, parameter, statement, _) => {
         sb.append("%sclass %s {\n".format(indent, name.name))
 
         val ioKeyword = if (isIO) "io " else ""
@@ -85,7 +85,7 @@ object AST {
 
         sb.append("%s}\n".format(indent))
       }
-      case ClassDeclaration(name, parentClass, variableDeclarations, methodDeclarations) => {
+      case ClassDeclaration(name, parentClass, variableDeclarations, methodDeclarations, _) => {
         sb.append("class %s ".format(name.name))
 
         parentClass.foreach(p => sb.append("extends %s".format(p.name)))

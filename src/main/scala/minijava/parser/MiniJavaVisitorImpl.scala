@@ -30,8 +30,9 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
       paramRaw <- Option(ctx.IDENTIFIER(1));
       param = Identifier(paramRaw.getSymbol.getText);
       statmtRaw <- Option(ctx.statement());
-      statmt <- Option(statmtRaw.accept(this)).flatMap(_.asInstanceOf[Option[Statement]])
-    ) yield MainClass(className, isIo, param, statmt)
+      statmt <- Option(statmtRaw.accept(this)).flatMap(_.asInstanceOf[Option[Statement]]);
+      lineNumber <- Option(ctx.start.getLine)
+    ) yield MainClass(className, isIo, param, statmt, lineNumber)
   }
 
   override def visitClassDeclaration(ctx: MiniJavaParser.ClassDeclarationContext): Option[ASTNode] = {
@@ -58,8 +59,9 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
         .map(_.asInstanceOf[MiniJavaParser.MethodDeclarationContext]
           .accept(this)
           .asInstanceOf[Option[MethodDeclaration]]
-        ).toList.sequence
-    ) yield ClassDeclaration(className, parentClass, varDecs, methodDecs)
+        ).toList.sequence;
+      lineNumber <- Option(ctx.start.getLine)
+    ) yield ClassDeclaration(className, parentClass, varDecs, methodDecs, lineNumber)
   }
 
   override def visitVarDeclaration(ctx: MiniJavaParser.VarDeclarationContext): Option[ASTNode] = {
