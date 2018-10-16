@@ -83,7 +83,7 @@ object Main {
     println(errorsMsg + warningsMsg)
   }
 
-  def checkASTAndPrettied(ast: Goal, input: String): Unit = {
+  /*def checkASTAndPrettied(ast: Goal, input: String): Unit = {
     /*println("----------------")
     println("|   Original   |")
     println("----------------")
@@ -140,5 +140,5 @@ object Main {
     assert(compareASTs)
     assert(comparePrettied)
     assert(compareNoSpaces)
-  }
+  }*/
 }

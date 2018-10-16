@@ -2,11 +2,15 @@ package minijava.grammar
 
 sealed trait ASTNode
 
-case class Goal(mainClass: MainClass, classDeclarations: List[ClassDeclaration]) extends ASTNode
+case class Goal(mainClass: MainClass, regularClasses: List[RegularClass]) extends ASTNode
 
-case class MainClass(name: Identifier, isIO: Boolean, parameter: Identifier, statement: Statement, line: Int) extends ASTNode
+sealed trait ClassDeclaration extends ASTNode
+case class MainClass(name: Identifier, isIO: Boolean, parameter: Identifier, statement: Statement, line: Int) extends ClassDeclaration
+case class RegularClass(name: Identifier, parentClass: Option[Identifier], variableDeclarations: List[VariableDeclaration], methodDeclarations: List[MethodDeclaration], line: Int) extends ClassDeclaration
 
-case class ClassDeclaration(name: Identifier, parentClass: Option[Identifier], variableDeclarations: List[VariableDeclaration], methodDeclarations: List[MethodDeclaration], line: Int) extends ASTNode
+//case class MainClass(name: Identifier, isIO: Boolean, parameter: Identifier, statement: Statement, line: Int) extends ASTNode
+
+//case class ClassDeclaration(name: Identifier, parentClass: Option[Identifier], variableDeclarations: List[VariableDeclaration], methodDeclarations: List[MethodDeclaration], line: Int) extends ASTNode
 
 case class VariableDeclaration(varType: Type, name: Identifier) extends ASTNode
 
@@ -51,7 +55,7 @@ case object Times extends BinaryOperator
 case class Identifier(name: String)
 
 object AST {
-  private val INDENT = "    "
+  /*private val INDENT = "    "
 
   def prettyPrint(node: ASTNode): String = {
     val sb = new StringBuilder()
@@ -271,5 +275,5 @@ object AST {
       }
       case _ => sb.append("TODO")
     }
-  }
+  }*/
 }

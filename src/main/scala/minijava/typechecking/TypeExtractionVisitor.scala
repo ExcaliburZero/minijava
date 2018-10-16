@@ -6,65 +6,75 @@ import minijava.messages.{CompilerError, CompilerMessage, LineNumber, TypeChecki
 import scala.collection.mutable.ArrayBuffer
 
 object TypeExtractionVisitor {
-  /*def mainClassToRegularClass(mainClass: MainClass): ClassDeclaration = {
-    mainClass match {
-      case MainClass(name, isIO, parameter, statement, line) =>
-        val variables = List()
-        val methods = List(
-          MethodDeclaration(
-            isIO, IdentifierType(Identifier("Any")), Identifier("main"),
-            List(), List(), List(statement),
-          )
-        )
+  def createTypeTable(): TypeTable = {
+    val typeTable = new TypeTable()
 
-        ClassDeclaration(name, None, variables, methods, line)
-    }
-  }*/
+    typeTable.add("int", PrimitiveIntType)
+    typeTable.add("int[]", PrimitiveIntArrayType)
+    typeTable.add("boolean", PrimitiveBooleanType)
+    typeTable.add("FAIL", FailType)
+
+    typeTable
+  }
 }
 
 class TypeExtractionVisitor extends ASTVisitor[Unit, Unit] {
-  private val typeTable = new TypeTable()
-  private val duplicateTypeErrors = new ArrayBuffer[CompilerMessage]()
+  private val typeTable = TypeExtractionVisitor.createTypeTable()
+  private val typeCheckingErrors = new ArrayBuffer[CompilerMessage]()
 
   def getTypeTable(): (TypeTable, List[CompilerMessage]) = {
-    (typeTable, duplicateTypeErrors.toList)
+    (typeTable, typeCheckingErrors.toList)
   }
 
   override def visitGoal(goal: Goal, a: Unit): Unit = {
     val mainClass = goal.mainClass
-    val classDeclarations = goal.classDeclarations
+    val regularClasses = goal.regularClasses
 
-    //visit(mainClass, a)
-    for (cd <- classDeclarations) visit(cd, a)
+    visit(mainClass, a)
+    for (cd <- regularClasses) visit(cd, a)
   }
 
-  /*override def visitMainClass(mainClass: MainClass, a: Unit): Unit = {
+  override def visitMainClass(mainClass: MainClass, a: Unit): Unit = {
     val className = mainClass.name.name
     val typeDefinition = ClassType(mainClass)
 
     typeTable.add(className, typeDefinition)
-      .left.map(_ => {
-      val message = "Duplicate declaration of main class \"%s\"".format(className)
+      .left.map {
+        case TypeAlreadyExistsError(name) =>
+          addDuplicateClassError(name, mainClass.line)
+        case DefineFAILClassError =>
+          addDefineFAILClassError(mainClass.line)
+      }
+  }
 
-      val compilerMessage = CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(mainClass.line)),
-        message)
-
-      duplicateTypeErrors.append(compilerMessage)
-    })
-  }*/
-
-  override def visitClassDeclaration(classDeclaration: ClassDeclaration, a: Unit): Unit = {
-    val className = classDeclaration.name.name
-    val typeDefinition = ClassType(classDeclaration)
+  override def visitRegularClass(regularClass: RegularClass, a: Unit): Unit = {
+    val className = regularClass.name.name
+    val typeDefinition = ClassType(regularClass)
 
     typeTable.add(className, typeDefinition)
-      .left.map(_ => {
-        val message = "Duplicate declaration of class \"%s\"".format(className)
+      .left.map {
+        case TypeAlreadyExistsError(name) =>
+          addDuplicateClassError(name, regularClass.line)
+        case DefineFAILClassError =>
+          addDefineFAILClassError(regularClass.line)
+      }
+  }
 
-        val compilerMessage = CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(classDeclaration.line)),
-          message)
+  private def addDuplicateClassError(className: String, lineNumber: Int): Unit = {
+    val message = "Duplicate declaration of class \"%s\"".format(className)
 
-        duplicateTypeErrors.append(compilerMessage)
-      })
+    val compilerMessage = CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(lineNumber)),
+      message)
+
+    typeCheckingErrors.append(compilerMessage)
+  }
+
+  private def addDefineFAILClassError(lineNumber: Int): Unit = {
+    val message = "Attempt to create class with reserved name \"FAIL\""
+
+    val compilerMessage = CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(lineNumber)),
+      message)
+
+    typeCheckingErrors.append(compilerMessage)
   }
 }

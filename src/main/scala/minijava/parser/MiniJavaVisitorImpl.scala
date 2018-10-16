@@ -16,7 +16,7 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
         .map(
           _.asInstanceOf[MiniJavaParser.ClassDeclarationContext]
             .accept(this)
-            .asInstanceOf[Option[ClassDeclaration]]
+            .asInstanceOf[Option[RegularClass]]
         ).toList.sequence
     ) yield Goal(mainCl, classDecs)
   }
@@ -61,7 +61,7 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
           .asInstanceOf[Option[MethodDeclaration]]
         ).toList.sequence;
       lineNumber <- Option(ctx.start.getLine)
-    ) yield ClassDeclaration(className, parentClass, varDecs, methodDecs, lineNumber)
+    ) yield RegularClass(className, parentClass, varDecs, methodDecs, lineNumber)
   }
 
   override def visitVarDeclaration(ctx: MiniJavaParser.VarDeclarationContext): Option[ASTNode] = {

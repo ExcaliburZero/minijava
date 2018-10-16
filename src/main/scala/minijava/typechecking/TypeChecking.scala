@@ -11,9 +11,7 @@ object TypeChecking {
       return Left(duplicateTypeErrors)
     }
 
-    println(typeTable)
-
-    ???
+    Right(typeTable)
   }
 
   def extractTypeTable(ast: Goal): (TypeTable, List[CompilerMessage]) = {
