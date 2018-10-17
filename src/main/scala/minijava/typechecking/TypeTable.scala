@@ -1,6 +1,6 @@
 package minijava.typechecking
 
-import minijava.grammar.ClassDeclaration
+import minijava.grammar.{Expression, Statement}
 
 import scala.collection.mutable
 
@@ -8,11 +8,15 @@ sealed trait PrimitiveType extends TypeDefinition
 case object PrimitiveBooleanType extends PrimitiveType
 case object PrimitiveIntType extends PrimitiveType
 case object PrimitiveIntArrayType extends PrimitiveType
+case object PrimitiveVoidType extends PrimitiveType
 
 sealed trait TypeDefinition
-//case class ArrayType(elementType: TypeDefinition) extends TypeDefinition
-case class ClassType(classDeclaration: ClassDeclaration) extends TypeDefinition
+case class ClassType(name: String, variables: List[Variable], methods: List[Method]) extends TypeDefinition
+case class MainClassType(name: String, mainMethod: Method) extends TypeDefinition
 case object FailType extends TypeDefinition
+
+case class Variable(name: String, typeName: String)
+case class Method(name: String, isIO: Boolean, returnType: String, parameters: List[Variable], statements: List[Statement], returnExpression: Option[Expression])
 
 case class TypeTableEntry(typeName: String, typeDefinition: TypeDefinition) {
   def isPrimitive(): Boolean = {

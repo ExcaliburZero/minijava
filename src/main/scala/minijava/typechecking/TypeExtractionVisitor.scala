@@ -12,6 +12,7 @@ object TypeExtractionVisitor {
     typeTable.add("int", PrimitiveIntType)
     typeTable.add("int[]", PrimitiveIntArrayType)
     typeTable.add("boolean", PrimitiveBooleanType)
+    typeTable.add("void", PrimitiveVoidType)
     typeTable.add("FAIL", FailType)
 
     typeTable
@@ -36,7 +37,9 @@ class TypeExtractionVisitor extends ASTVisitor[Unit, Unit] {
 
   override def visitMainClass(mainClass: MainClass, a: Unit): Unit = {
     val className = mainClass.name.name
-    val typeDefinition = ClassType(mainClass)
+
+    val mainMethod = Method("main", mainClass.isIO, "void", List(), List(mainClass.statement), None)
+    val typeDefinition = MainClassType(className, mainMethod)
 
     typeTable.add(className, typeDefinition)
       .left.map {
@@ -49,7 +52,26 @@ class TypeExtractionVisitor extends ASTVisitor[Unit, Unit] {
 
   override def visitRegularClass(regularClass: RegularClass, a: Unit): Unit = {
     val className = regularClass.name.name
-    val typeDefinition = ClassType(regularClass)
+
+    val variables = regularClass.variableDeclarations.map(vd => {
+      val t = typeToName(vd.varType)
+
+      Variable(vd.name.name, t)
+    })
+    val methods = regularClass.methodDeclarations.map(md => {
+      val name = md.name.name
+      val isIO = md.isIO
+      val returnType = typeToName(md.varType)
+      val parameters = md.parameters.map(p => {
+        Variable(p._2.name, typeToName(p._1))
+      })
+      val statements = md.statements
+      val returnExpression = Some(md.returnExpression)
+
+      Method(name, isIO, returnType, parameters, statements, returnExpression)
+    })
+
+    val typeDefinition = ClassType(className, variables, methods)
 
     typeTable.add(className, typeDefinition)
       .left.map {
@@ -76,5 +98,14 @@ class TypeExtractionVisitor extends ASTVisitor[Unit, Unit] {
       message)
 
     typeCheckingErrors.append(compilerMessage)
+  }
+
+  private def typeToName(t: Type): String = {
+    t match {
+      case IntArrayType => "int[]"
+      case BooleanType => "boolean"
+      case IntType => "int"
+      case IdentifierType(n) => n.name
+    }
   }
 }
