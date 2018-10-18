@@ -24,9 +24,9 @@ case class IdentifierType(name: Identifier) extends Type
 
 sealed trait Statement extends ASTNode
 case class StatementBlock(statements: List[Statement]) extends Statement
-case class IfStatement(condition: Expression, thenClause: Statement, elseClause: Statement) extends Statement
+case class IfStatement(condition: Expression, thenClause: Statement, elseClause: Statement, line: Int) extends Statement
 case class WhileStatement(condition: Expression, statement: Statement) extends Statement
-case class PrintStatement(expression: Expression) extends Statement
+case class PrintStatement(expression: Expression, line: Int) extends Statement
 case class AssignmentStatement(name: Identifier, expression: Expression, line: Int) extends Statement
 case class ArrayAssignmentStatement(name: Identifier, indexExpression: Expression, valueExpression: Expression) extends Statement
 

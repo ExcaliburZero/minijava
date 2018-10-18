@@ -66,7 +66,43 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     errors shouldBe expected
   }
 
-  it should "pass the BinarySearch example" in {
+  it should "pass the HelloOne example" in {
+    val input = Main.readFile("examples/HelloOne.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    typeTable.get("HelloOne").isDefined shouldBe true
+  }
+
+  it should "fail when a type check error exists in the main method" in {
+    val input = Main.readFile("examples/HelloTrue.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(3)), "Incompatible types in print statement.\nExpected:  int\nFound:     boolean")
+    )
+
+    errors shouldBe expected
+  }
+
+  /*it should "pass the BinarySearch example" in {
     val input = Main.readFile("examples/BinarySearch.minijava")
 
     val ast = Main.parseString(input)
@@ -80,5 +116,5 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     val typeTable = typeCheckResult.right.get
 
     typeTable.get("BS").isDefined shouldBe true
-  }
+  }*/
 }

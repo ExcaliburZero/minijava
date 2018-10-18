@@ -1,0 +1,5 @@
+class HelloOne {
+    public static io void main(String[] a){
+        System.out.println(1);
+    }
+}

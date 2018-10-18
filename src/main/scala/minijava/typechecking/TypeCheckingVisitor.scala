@@ -1,11 +1,11 @@
 package minijava.typechecking
 
 import minijava.grammar._
-import minijava.messages.{CompilerMessage, LineNumber, Location}
+import minijava.messages._
 
 import scala.collection.mutable.ArrayBuffer
 
-case class TypeVisitorContext(typeTable: TypeTable, curClass: ClassType, curMethod: Method)
+case class TypeVisitorContext(typeTable: TypeTable, curClass: ClassLikeType, curMethod: Method)
 
 class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition] {
   private val typeCheckingErrors = new ArrayBuffer[CompilerMessage]()
@@ -16,11 +16,33 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
 
   override def visitStatementBlock(statementBlock: StatementBlock, a: TypeVisitorContext): TypeDefinition = super.visitStatementBlock(statementBlock, a)
 
-  override def visitIfStatement(ifStatement: IfStatement, a: TypeVisitorContext): TypeDefinition = super.visitIfStatement(ifStatement, a)
+  override def visitIfStatement(ifStatement: IfStatement, a: TypeVisitorContext): TypeDefinition = {
+    val conditionType = visit(ifStatement.condition, a)
+
+    val location = LineNumber(ifStatement.line)
+    
+    if (conditionType != PrimitiveBooleanType) {
+      failTypeCheck(conditionType, PrimitiveBooleanType, a.typeTable, location, "if statement")
+    }
+
+    visit(ifStatement.thenClause, a)
+    visit(ifStatement.elseClause, a)
+
+    PrimitiveVoidType
+  }
 
   override def visitWhileStatement(whileStatement: WhileStatement, a: TypeVisitorContext): TypeDefinition = super.visitWhileStatement(whileStatement, a)
 
-  override def visitPrintStatement(printStatement: PrintStatement, a: TypeVisitorContext): TypeDefinition = super.visitPrintStatement(printStatement, a)
+  override def visitPrintStatement(printStatement: PrintStatement, a: TypeVisitorContext): TypeDefinition = {
+    val expressionType = visit(printStatement.expression, a)
+
+    val location = LineNumber(printStatement.line)
+
+    TypeDefinition.conformsTo(expressionType, PrimitiveIntType, a.typeTable) match {
+      case Some(t) => t
+      case None => failTypeCheck(expressionType, PrimitiveIntType, a.typeTable, location, "print statement")
+    }
+  }
 
   override def visitAssignmentStatement(assignmentStatement: AssignmentStatement, a: TypeVisitorContext): TypeDefinition = {
     val expressionType = visit(assignmentStatement.expression, a)
@@ -30,22 +52,29 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
 
     TypeDefinition.conformsTo(expressionType, variableType, a.typeTable) match {
       case Some(t) => t
-      case None => failTypeCheck(expressionType, variableType, a.typeTable, location)
+      case None => failTypeCheck(expressionType, variableType, a.typeTable, location, "assignment statement")
     }
   }
 
   override def visitArrayAssignmentStatement(arrayAssignmentStatement: ArrayAssignmentStatement, a: TypeVisitorContext): TypeDefinition = super.visitArrayAssignmentStatement(arrayAssignmentStatement, a)
 
-  override def visitBinaryOperationExpression(binaryOperationExpression: BinaryOperationExpression, a: TypeVisitorContext): TypeDefinition = super.visitBinaryOperationExpression(binaryOperationExpression, a)
+  override def visitBinaryOperationExpression(binaryOperationExpression: BinaryOperationExpression, a: TypeVisitorContext): TypeDefinition = {
+    val firstType = visit(binaryOperationExpression.firstExpression, a)
+    val secondType = visit(binaryOperationExpression.secondExpression, a)
+
+    ???
+  }
 
   override def visitArrayAccessExpression(arrayAccessExpression: ArrayAccessExpression, a: TypeVisitorContext): TypeDefinition = super.visitArrayAccessExpression(arrayAccessExpression, a)
 
-  override def visitArrayLengthExpression(arrayLengthExpression: ArrayLengthExpression, a: TypeVisitorContext): TypeDefinition = super.visitArrayLengthExpression(arrayLengthExpression, a)
+  override def visitArrayLengthExpression(arrayLengthExpression: ArrayLengthExpression, a: TypeVisitorContext): TypeDefinition = {
+    PrimitiveIntType
+  }
 
   override def visitMethodCallExpression(methodCallExpression: MethodCallExpression, a: TypeVisitorContext): TypeDefinition = {
     val objectType = visit(methodCallExpression.objectExpression, a)
 
-    val classType = objectType match {
+    objectType match {
       case _: ClassType =>
       case FailType => return FailType
       case _ => return failMethodCallOnNonObject(objectType)
@@ -62,11 +91,17 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     }
   }
 
-  override def visitIntegerLiteral(integerLiteral: IntegerLiteral, a: TypeVisitorContext): TypeDefinition = super.visitIntegerLiteral(integerLiteral, a)
+  override def visitIntegerLiteral(integerLiteral: IntegerLiteral, a: TypeVisitorContext): TypeDefinition = {
+    PrimitiveIntType
+  }
 
-  override def visitTrueLiteral(a: TypeVisitorContext): TypeDefinition = super.visitTrueLiteral(a)
+  override def visitTrueLiteral(a: TypeVisitorContext): TypeDefinition = {
+    PrimitiveBooleanType
+  }
 
-  override def visitFalseLiteral(a: TypeVisitorContext): TypeDefinition = super.visitFalseLiteral(a)
+  override def visitFalseLiteral(a: TypeVisitorContext): TypeDefinition = {
+    PrimitiveBooleanType
+  }
 
   override def visitIdentifierExpression(identifierExpression: IdentifierExpression, a: TypeVisitorContext): TypeDefinition = {
     getVarType(identifierExpression.name.name, a)
@@ -107,10 +142,11 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     ???
   }
 
-  def failTypeCheck(expressionType: TypeDefinition, variableType: TypeDefinition, typeTable: TypeTable, location: Location): TypeDefinition = {
-    val message = "Incompatible types.\nExpected: %s\nFound:%s".format(variableType.getName(), expressionType.getName())
+  def failTypeCheck(actualType: TypeDefinition, expectedType: TypeDefinition, typeTable: TypeTable, location: Location, context: String): TypeDefinition = {
+    val message = "Incompatible types in %s.\nExpected:  %s\nFound:     %s".format(context, expectedType.getName(), actualType.getName())
 
-    val typeCheckError = ???
+    val typeCheckError = CompilerMessage(CompilerError, TypeCheckingError, Some(location),
+      message)
 
     typeCheckingErrors.append(typeCheckError)
 
@@ -123,8 +159,8 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     ???
   }
 
-  def getMatchingMethod(objectType: ClassType, methodName: String, parameterTypes: List[TypeDefinition], a: TypeVisitorContext): Option[Method] = {
-    val classNameMatches = objectType.methods
+  def getMatchingMethod(objectType: ClassLikeType, methodName: String, parameterTypes: List[TypeDefinition], a: TypeVisitorContext): Option[Method] = {
+    val classNameMatches = objectType.getMethods()
         .filter(m => m.name == methodName)
 
     val classParamMatches = classNameMatches.filter(m => {

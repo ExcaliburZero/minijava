@@ -36,13 +36,16 @@ object TypeChecking {
           for (m <- classType.methods) {
             typeCheckMethod(visitor, typeTable, classType, m)
           }
+        case mainClassType: MainClassType =>
+          typeCheckMethod(visitor, typeTable, mainClassType, mainClassType.mainMethod)
+        case _ =>
       }
     }
 
     visitor.getTypeCheckingErrors()
   }
 
-  def typeCheckMethod(visitor: TypeCheckingVisitor, typeTable: TypeTable, classType: ClassType, method: Method): Unit = {
+  def typeCheckMethod(visitor: TypeCheckingVisitor, typeTable: TypeTable, classType: ClassLikeType, method: Method): Unit = {
     val context = TypeVisitorContext(typeTable, classType, method)
 
     for (s <- method.statements) {

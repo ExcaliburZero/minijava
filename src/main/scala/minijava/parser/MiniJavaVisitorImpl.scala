@@ -140,8 +140,9 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
       thenClRaw <- Option(ctx.statement(0));
       thenCl <- thenClRaw.accept(this).asInstanceOf[Option[Statement]];
       elseClRaw <- Option(ctx.statement(1));
-      elseCl <- elseClRaw.accept(this).asInstanceOf[Option[Statement]]
-    ) yield IfStatement(cond, thenCl, elseCl)
+      elseCl <- elseClRaw.accept(this).asInstanceOf[Option[Statement]];
+      lineNumber <- Option(ctx.start.getLine)
+    ) yield IfStatement(cond, thenCl, elseCl, lineNumber)
   }
 
   override def visitWhileStatement(ctx: MiniJavaParser.WhileStatementContext): Option[ASTNode] = {
@@ -156,8 +157,9 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
   override def visitPrintStatement(ctx: MiniJavaParser.PrintStatementContext): Option[ASTNode] = {
     for (
       expRaw <- Option(ctx.expression());
-      exp <- expRaw.accept(this).asInstanceOf[Option[Expression]]
-    ) yield PrintStatement(exp)
+      exp <- expRaw.accept(this).asInstanceOf[Option[Expression]];
+      lineNumber <- Option(ctx.start.getLine)
+    ) yield PrintStatement(exp, lineNumber)
   }
 
   override def visitAssignmentStatement(ctx: MiniJavaParser.AssignmentStatementContext): Option[ASTNode] = {

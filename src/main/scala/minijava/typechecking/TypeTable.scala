@@ -19,6 +19,11 @@ object TypeDefinition {
 
     left match {
       case FailType => return Some(FailType)
+      case _ =>
+    }
+
+    if (left.isInstanceOf[PrimitiveType] || right.isInstanceOf[PrimitiveType]) {
+      return None
     }
 
     ???
@@ -38,9 +43,32 @@ sealed trait TypeDefinition {
     }
   }
 }
-case class ClassType(name: String, parentClass: Option[String], variables: List[Variable], methods: List[Method]) extends TypeDefinition
-case class MainClassType(name: String, mainMethod: Method) extends TypeDefinition
 case object FailType extends TypeDefinition
+
+sealed trait ClassLikeType extends TypeDefinition {
+  def getParentClass(): Option[String] = {
+    this match {
+      case classType: ClassType => classType.getParentClass()
+      case _: MainClassType => None
+    }
+  }
+
+  def getVariables(): List[Variable] = {
+    this match {
+      case classType: ClassType => classType.getVariables()
+      case _: MainClassType => List()
+    }
+  }
+
+  def getMethods(): List[Method] = {
+    this match {
+      case classType: ClassType => classType.getMethods()
+      case _: MainClassType => List()
+    }
+  }
+}
+case class ClassType(name: String, parentClass: Option[String], variables: List[Variable], methods: List[Method]) extends ClassLikeType
+case class MainClassType(name: String, mainMethod: Method) extends ClassLikeType
 
 case class Variable(name: String, typeName: String)
 case class Method(name: String, isIO: Boolean, returnType: String, parameters: List[Variable], localVariables: List[Variable], statements: List[Statement], returnExpression: Option[Expression])
