@@ -62,6 +62,22 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     val firstType = visit(binaryOperationExpression.firstExpression, a)
     val secondType = visit(binaryOperationExpression.secondExpression, a)
 
+    val operatorMatches = Operators.binaryOperators
+      .filter(_.node == binaryOperationExpression.operator)
+
+    if (operatorMatches.nonEmpty) {
+      val paramMatch = operatorMatches.filter(op =>
+        TypeDefinition.conformsTo(firstType, op.firstParamType, a.typeTable).isDefined &&
+        TypeDefinition.conformsTo(secondType, op.secondParamType, a.typeTable).isDefined
+      )
+
+      if (paramMatch.nonEmpty) {
+        return paramMatch.head.returnType
+      }
+
+      ???
+    }
+
     ???
   }
 
@@ -113,11 +129,22 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
 
   override def visitNewIntArrayExpression(intArrayExpression: NewIntArrayExpression, a: TypeVisitorContext): TypeDefinition = super.visitNewIntArrayExpression(intArrayExpression, a)
 
-  override def visitNewObjectExpression(newObjectExpression: NewObjectExpression, a: TypeVisitorContext): TypeDefinition = super.visitNewObjectExpression(newObjectExpression, a)
+  override def visitNewObjectExpression(newObjectExpression: NewObjectExpression, a: TypeVisitorContext): TypeDefinition = {
+    // TODO: What about constructor parameters?
+
+    val className = newObjectExpression.className.name
+
+    a.typeTable.get(className) match {
+      case Some(t) => t
+      case None => ???
+    }
+  }
 
   override def visitNegatedExpression(negatedExpression: NegatedExpression, a: TypeVisitorContext): TypeDefinition = super.visitNegatedExpression(negatedExpression, a)
 
-  override def visitParenedExpression(parenedExpression: ParenedExpression, a: TypeVisitorContext): TypeDefinition = super.visitParenedExpression(parenedExpression, a)
+  override def visitParenedExpression(parenedExpression: ParenedExpression, a: TypeVisitorContext): TypeDefinition = {
+    visit(parenedExpression.expression, a)
+  }
 
   def getVarType(name: String, context: TypeVisitorContext): TypeDefinition = {
     // TODO: somewhere check for shadowed names

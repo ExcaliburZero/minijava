@@ -102,6 +102,23 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     errors shouldBe expected
   }
 
+  it should "pass the Factorial example" in {
+    val input = Main.readFile("examples/Factorial.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    typeTable.get("Factorial").isDefined shouldBe true
+    typeTable.get("Fac").isDefined shouldBe true
+  }
+
   /*it should "pass the BinarySearch example" in {
     val input = Main.readFile("examples/BinarySearch.minijava")
 

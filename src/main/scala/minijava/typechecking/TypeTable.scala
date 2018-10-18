@@ -48,21 +48,21 @@ case object FailType extends TypeDefinition
 sealed trait ClassLikeType extends TypeDefinition {
   def getParentClass(): Option[String] = {
     this match {
-      case classType: ClassType => classType.getParentClass()
+      case classType: ClassType => classType.parentClass
       case _: MainClassType => None
     }
   }
 
   def getVariables(): List[Variable] = {
     this match {
-      case classType: ClassType => classType.getVariables()
+      case classType: ClassType => classType.variables
       case _: MainClassType => List()
     }
   }
 
   def getMethods(): List[Method] = {
     this match {
-      case classType: ClassType => classType.getMethods()
+      case classType: ClassType => classType.methods
       case _: MainClassType => List()
     }
   }
