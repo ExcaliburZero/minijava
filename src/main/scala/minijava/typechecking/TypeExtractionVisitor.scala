@@ -38,7 +38,7 @@ class TypeExtractionVisitor extends ASTVisitor[Unit, Unit] {
   override def visitMainClass(mainClass: MainClass, a: Unit): Unit = {
     val className = mainClass.name.name
 
-    val mainMethod = Method("main", mainClass.isIO, "void", List(), List(mainClass.statement), None)
+    val mainMethod = Method("main", mainClass.isIO, "void", List(), List(), List(mainClass.statement), None)
     val typeDefinition = MainClassType(className, mainMethod)
 
     typeTable.add(className, typeDefinition)
@@ -65,10 +65,13 @@ class TypeExtractionVisitor extends ASTVisitor[Unit, Unit] {
       val parameters = md.parameters.map(p => {
         Variable(p._2.name, typeToName(p._1))
       })
+      val localVariables = md.variableDeclarations.map(p => {
+        Variable(p.name.name, typeToName(p.varType))
+      })
       val statements = md.statements
       val returnExpression = Some(md.returnExpression)
 
-      Method(name, isIO, returnType, parameters, statements, returnExpression)
+      Method(name, isIO, returnType, parameters, localVariables, statements, returnExpression)
     })
 
     val typeDefinition = ClassType(className, variables, methods)

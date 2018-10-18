@@ -11,6 +11,12 @@ object TypeChecking {
       return Left(duplicateTypeErrors)
     }
 
+    val typeCheckingErrors = visitingTypeCheck(typeTable)
+
+    if (typeCheckingErrors.nonEmpty) {
+      return Left(typeCheckingErrors)
+    }
+
     Right(typeTable)
   }
 
@@ -19,5 +25,31 @@ object TypeChecking {
 
     typeExtractionVisitor.visitGoal(ast, ())
     typeExtractionVisitor.getTypeTable()
+  }
+
+  def visitingTypeCheck(typeTable: TypeTable): List[CompilerMessage] = {
+    val visitor = new TypeCheckingVisitor()
+
+    for (t <- typeTable.types()) {
+      val typeDef = t.typeDefinition
+      typeDef match {
+        case classType: ClassType =>
+          for (m <- classType.methods) {
+            typeCheckMethod(visitor, typeTable, classType, m)
+          }
+      }
+    }
+
+    visitor.getTypeCheckingErrors()
+  }
+
+  def typeCheckMethod(visitor: TypeCheckingVisitor, typeTable: TypeTable, classType: ClassType, method: Method): Unit = {
+    val context = TypeVisitorContext(typeTable, classType, method)
+
+    for (s <- method.statements) {
+      visitor.visit(s, context)
+    }
+
+    method.returnExpression.foreach(e => visitor.visit(e, context))
   }
 }

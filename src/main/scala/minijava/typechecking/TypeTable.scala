@@ -16,7 +16,7 @@ case class MainClassType(name: String, mainMethod: Method) extends TypeDefinitio
 case object FailType extends TypeDefinition
 
 case class Variable(name: String, typeName: String)
-case class Method(name: String, isIO: Boolean, returnType: String, parameters: List[Variable], statements: List[Statement], returnExpression: Option[Expression])
+case class Method(name: String, isIO: Boolean, returnType: String, parameters: List[Variable], localVariables: List[Variable], statements: List[Statement], returnExpression: Option[Expression])
 
 case class TypeTableEntry(typeName: String, typeDefinition: TypeDefinition) {
   def isPrimitive(): Boolean = {
@@ -51,6 +51,10 @@ class TypeTable {
 
   def get(typeName: String): Option[TypeTableEntry] = {
     lookupTable.get(typeName)
+  }
+
+  def types(): Iterable[TypeTableEntry] = {
+    lookupTable.values
   }
 
   override def toString(): String = {

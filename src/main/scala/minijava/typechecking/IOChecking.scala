@@ -1,6 +1,6 @@
 package minijava.typechecking
 
-object IOChecking {
+/*object IOChecking {
   def doesMethodDoIO(typeTable: TypeTable, method: Method): Boolean = {
     val visitor = new IOCheckingVisitor()
 
@@ -11,4 +11,4 @@ object IOChecking {
 
     checkIO.contains(true) || returnIsIO
   }
-}
+}*/
