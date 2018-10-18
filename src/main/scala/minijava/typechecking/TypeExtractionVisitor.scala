@@ -52,6 +52,7 @@ class TypeExtractionVisitor extends ASTVisitor[Unit, Unit] {
 
   override def visitRegularClass(regularClass: RegularClass, a: Unit): Unit = {
     val className = regularClass.name.name
+    val parentClass = regularClass.parentClass.map(_.name)
 
     val variables = regularClass.variableDeclarations.map(vd => {
       val t = typeToName(vd.varType)
@@ -74,7 +75,7 @@ class TypeExtractionVisitor extends ASTVisitor[Unit, Unit] {
       Method(name, isIO, returnType, parameters, localVariables, statements, returnExpression)
     })
 
-    val typeDefinition = ClassType(className, variables, methods)
+    val typeDefinition = ClassType(className, parentClass, variables, methods)
 
     typeTable.add(className, typeDefinition)
       .left.map {

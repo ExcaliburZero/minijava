@@ -165,8 +165,9 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
       idRaw <- Option(ctx.IDENTIFIER());
       id = Identifier(idRaw.getSymbol.getText);
       expRaw <- Option(ctx.expression());
-      exp <- expRaw.accept(this).asInstanceOf[Option[Expression]]
-    ) yield AssignmentStatement(id, exp)
+      exp <- expRaw.accept(this).asInstanceOf[Option[Expression]];
+      lineNumber <- Option(ctx.start.getLine)
+    ) yield AssignmentStatement(id, exp, lineNumber)
   }
 
   override def visitArrayAssignmentStatement(ctx: MiniJavaParser.ArrayAssignmentStatementContext): Option[ASTNode] = {

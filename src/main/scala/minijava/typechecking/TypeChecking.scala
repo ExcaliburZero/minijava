@@ -31,8 +31,7 @@ object TypeChecking {
     val visitor = new TypeCheckingVisitor()
 
     for (t <- typeTable.types()) {
-      val typeDef = t.typeDefinition
-      typeDef match {
+      t match {
         case classType: ClassType =>
           for (m <- classType.methods) {
             typeCheckMethod(visitor, typeTable, classType, m)
