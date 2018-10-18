@@ -31,7 +31,7 @@ case class AssignmentStatement(name: Identifier, expression: Expression, line: I
 case class ArrayAssignmentStatement(name: Identifier, indexExpression: Expression, valueExpression: Expression) extends Statement
 
 sealed trait Expression extends ASTNode
-case class BinaryOperationExpression(firstExpression: Expression, operator: BinaryOperator, secondExpression: Expression) extends Expression
+case class BinaryOperationExpression(firstExpression: Expression, operator: BinaryOperator, secondExpression: Expression, line: Int, column: Int) extends Expression
 case class ArrayAccessExpression(arrayExpression: Expression, indexExpression: Expression) extends Expression
 case class ArrayLengthExpression(arrayExpression: Expression) extends Expression
 case class MethodCallExpression(objectExpression: Expression, methodName: Identifier, parameters: List[Expression]) extends Expression
@@ -45,7 +45,17 @@ case class NewObjectExpression(className: Identifier) extends Expression
 case class NegatedExpression(expression: Expression) extends Expression
 case class ParenedExpression(expression: Expression) extends Expression
 
-sealed trait BinaryOperator
+sealed trait BinaryOperator {
+  def toSymbol(): String = {
+    this match {
+      case And => "&&"
+      case LessThan => "<"
+      case Plus => "+"
+      case Minus => "-"
+      case Times => "*"
+    }
+  }
+}
 case object And extends BinaryOperator
 case object LessThan extends BinaryOperator
 case object Plus extends BinaryOperator

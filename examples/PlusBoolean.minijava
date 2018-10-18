@@ -1,0 +1,5 @@
+class PlusBoolean {
+    public static io void main(String[] a){
+        System.out.println(23 + false);
+    }
+}

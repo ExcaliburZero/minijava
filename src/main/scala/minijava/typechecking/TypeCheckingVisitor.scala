@@ -65,6 +65,8 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     val operatorMatches = Operators.binaryOperators
       .filter(_.node == binaryOperationExpression.operator)
 
+    val location = LineColumn(binaryOperationExpression.line, binaryOperationExpression.column)
+
     if (operatorMatches.nonEmpty) {
       val paramMatch = operatorMatches.filter(op =>
         TypeDefinition.conformsTo(firstType, op.firstParamType, a.typeTable).isDefined &&
@@ -75,7 +77,23 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
         return paramMatch.head.returnType
       }
 
-      ???
+      val messageStart = "Found instance of %s with parameters of type \"%s\" and \"%s\". No version of the operation was found for this type combination.\n\nValid type combinations for this operator are:\n\n".format(
+        binaryOperationExpression.operator.toSymbol(),
+        firstType.getName(), secondType.getName()
+      )
+
+      val validTypes = for (op <- operatorMatches)
+        yield "\"%s\" and \"%s\"".format(
+          op.firstParamType.getName(), op.secondParamType.getName())
+
+      val message = messageStart + validTypes.mkString("\n")
+
+      val typeCheckError = CompilerMessage(CompilerError, TypeCheckingError, Some(location),
+        message)
+
+      typeCheckingErrors.append(typeCheckError)
+
+      return FailType
     }
 
     ???

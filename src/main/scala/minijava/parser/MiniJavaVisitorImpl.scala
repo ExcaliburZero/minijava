@@ -196,8 +196,10 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
         case "*" => Times
       };
       sndExpRaw <- Option(ctx.expression(1));
-      sndExp <- sndExpRaw.accept(this).asInstanceOf[Option[Expression]]
-    ) yield BinaryOperationExpression(fstExp, op, sndExp)
+      sndExp <- sndExpRaw.accept(this).asInstanceOf[Option[Expression]];
+      lineNumber <- Option(ctx.start.getLine);
+      columnNumber <- Option(ctx.start.getCharPositionInLine)
+    ) yield BinaryOperationExpression(fstExp, op, sndExp, lineNumber, columnNumber)
   }
 
   override def visitArrayAccessExpression(ctx: MiniJavaParser.ArrayAccessExpressionContext): Option[ASTNode] = {

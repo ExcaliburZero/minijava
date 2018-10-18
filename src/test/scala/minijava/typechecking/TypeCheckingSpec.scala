@@ -1,7 +1,7 @@
 package minijava.typechecking
 
 import minijava.Main
-import minijava.messages.{CompilerError, CompilerMessage, LineNumber, TypeCheckingError}
+import minijava.messages._
 import org.scalatest._
 
 class TypeCheckingSpec extends FlatSpec with Matchers {
@@ -97,6 +97,26 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
 
     val expected = List(
       CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(3)), "Incompatible types in print statement.\nExpected:  int\nFound:     boolean")
+    )
+
+    errors shouldBe expected
+  }
+
+  it should "fail when an operator is used with a wrong parameter type" in {
+    val input = Main.readFile("examples/PlusBoolean.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineColumn(3, 27)), "Found instance of + with parameters of type \"int\" and \"boolean\". No version of the operation was found for this type combination.\n\nValid type combinations for this operator are:\n\n\"int\" and \"int\"")
     )
 
     errors shouldBe expected
