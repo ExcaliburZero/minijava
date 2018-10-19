@@ -54,6 +54,8 @@ class TypeExtractionVisitor extends ASTVisitor[Unit, Unit] {
     val className = regularClass.name.name
     val parentClass = regularClass.parentClass.map(_.name)
 
+    checkForDuplicateClassVars(regularClass.variableDeclarations, className)
+
     val variables = regularClass.variableDeclarations.map(vd => {
       val t = typeToName(vd.varType)
       if (t == "FAIL") {
@@ -83,6 +85,10 @@ class TypeExtractionVisitor extends ASTVisitor[Unit, Unit] {
       val statements = md.statements
       val returnExpression = Some(md.returnExpression)
 
+      checkForDuplicateMethodVars(parameters,
+        localVariables.zip(md.variableDeclarations.map(_.line)),
+        className, md.name.name)
+
       Method(name, isIO, returnType, parameters, localVariables, statements, returnExpression)
     })
 
@@ -95,6 +101,79 @@ class TypeExtractionVisitor extends ASTVisitor[Unit, Unit] {
         case DefineFAILClassError =>
           addDefineFAILClassError(regularClass.line)
       }
+  }
+
+  private def checkForDuplicateClassVars(variableDeclarations: List[VariableDeclaration], className: String): Unit = {
+    val variableNames = variableDeclarations.map(_.name.name)
+
+    for (v <- variableNames.distinct) {
+      if (variableNames.count(_ == v) > 1) {
+        val message = "Duplicate declaration of class variable \"%s\" of class %s".format(v, className)
+
+        val lines = variableDeclarations
+          .filter(_.name.name == v)
+          .map(_.line)
+          .drop(1)
+
+        for (line <- lines) {
+          val compilerMessage = CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(line)),
+            message)
+
+          typeCheckingErrors.append(compilerMessage)
+        }
+      }
+    }
+  }
+
+  private def checkForDuplicateMethodVars(parameters: List[Variable], localVariablesAndLine: List[(Variable, Int)], className: String, methodName: String): Unit = {
+    val localVariables = localVariablesAndLine.map(_._1)
+
+    val localNames = localVariables.map(_.name)
+    val paramNames = parameters.map(_.name)
+
+    val allVars = paramNames ++ localNames
+
+    for (v <- allVars.distinct) {
+      if (allVars.count(_ == v) > 1) {
+        if (paramNames.contains(v)) {
+          val message = "Duplicate declaration of parameter \"%s\" in method %s of class %s".format(v, methodName, className)
+
+          // Multiple parameters with same name
+          for (_ <- 1 until paramNames.count(_ == v)) {
+            val compilerMessage = CompilerMessage(CompilerError, TypeCheckingError, None,
+              message)
+
+            typeCheckingErrors.append(compilerMessage)
+          }
+
+          // Local re-declarations
+          val localLines = localVariablesAndLine
+            .filter(_._1.name == v)
+            .map(_._2)
+
+          for (line <- localLines) {
+            val compilerMessage = CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(line)),
+              message)
+
+            typeCheckingErrors.append(compilerMessage)
+          }
+        } else {
+          val message = "Duplicate declaration of local variable \"%s\" in method %s of class %s".format(v, methodName, className)
+
+          val lines = localVariablesAndLine
+            .filter(_._1.name == v)
+            .map(_._2)
+            .drop(1)
+
+          for (line <- lines) {
+            val compilerMessage = CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(line)),
+              message)
+
+            typeCheckingErrors.append(compilerMessage)
+          }
+        }
+      }
+    }
   }
 
   private def addDuplicateClassError(className: String, lineNumber: Int): Unit = {
