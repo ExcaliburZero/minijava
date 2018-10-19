@@ -25,14 +25,14 @@ case class IdentifierType(name: Identifier) extends Type
 sealed trait Statement extends ASTNode
 case class StatementBlock(statements: List[Statement]) extends Statement
 case class IfStatement(condition: Expression, thenClause: Statement, elseClause: Statement, line: Int) extends Statement
-case class WhileStatement(condition: Expression, statement: Statement) extends Statement
+case class WhileStatement(condition: Expression, statement: Statement, line: Int) extends Statement
 case class PrintStatement(expression: Expression, line: Int) extends Statement
 case class AssignmentStatement(name: Identifier, expression: Expression, line: Int) extends Statement
-case class ArrayAssignmentStatement(name: Identifier, indexExpression: Expression, valueExpression: Expression) extends Statement
+case class ArrayAssignmentStatement(name: Identifier, indexExpression: Expression, valueExpression: Expression, line: Int) extends Statement
 
 sealed trait Expression extends ASTNode
 case class BinaryOperationExpression(firstExpression: Expression, operator: BinaryOperator, secondExpression: Expression, line: Int, column: Int) extends Expression
-case class ArrayAccessExpression(arrayExpression: Expression, indexExpression: Expression) extends Expression
+case class ArrayAccessExpression(arrayExpression: Expression, indexExpression: Expression, line: Int, column: Int) extends Expression
 case class ArrayLengthExpression(arrayExpression: Expression) extends Expression
 case class MethodCallExpression(objectExpression: Expression, methodName: Identifier, parameters: List[Expression]) extends Expression
 case class IntegerLiteral(value: Int) extends Expression
@@ -40,9 +40,9 @@ case object TrueLiteral extends Expression
 case object FalseLiteral extends Expression
 case class IdentifierExpression(name: Identifier) extends Expression
 case object ThisLiteral extends Expression
-case class NewIntArrayExpression(lengthExpression: Expression) extends Expression
+case class NewIntArrayExpression(lengthExpression: Expression, line: Int, column: Int) extends Expression
 case class NewObjectExpression(className: Identifier) extends Expression
-case class NegatedExpression(expression: Expression) extends Expression
+case class NegatedExpression(expression: Expression, line: Int, column: Int) extends Expression
 case class ParenedExpression(expression: Expression) extends Expression
 
 sealed trait BinaryOperator {

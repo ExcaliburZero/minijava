@@ -17,13 +17,23 @@ object TypeDefinition {
       return Some(left)
     }
 
-    left match {
-      case FailType => return Some(FailType)
-      case _ =>
+    if (left == FailType || right == FailType) {
+      return Some(FailType)
     }
 
     if (left.isInstanceOf[PrimitiveType] || right.isInstanceOf[PrimitiveType]) {
       return None
+    }
+
+    left match {
+      case leftClass: ClassLikeType =>
+        leftClass.getParentClass() match {
+          case Some(p) =>
+            val leftParent = typeTable.get(p).get
+            return conformsTo(leftParent, right, typeTable)
+          case None =>
+        }
+      case _ =>
     }
 
     ???

@@ -150,8 +150,9 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
       condRaw <- Option(ctx.expression());
       cond <- condRaw.accept(this).asInstanceOf[Option[Expression]];
       statmtRaw <- Option(ctx.statement());
-      statmt <- statmtRaw.accept(this).asInstanceOf[Option[Statement]]
-    ) yield WhileStatement(cond, statmt)
+      statmt <- statmtRaw.accept(this).asInstanceOf[Option[Statement]];
+      lineNumber <- Option(ctx.start.getLine)
+    ) yield WhileStatement(cond, statmt, lineNumber)
   }
 
   override def visitPrintStatement(ctx: MiniJavaParser.PrintStatementContext): Option[ASTNode] = {
@@ -179,8 +180,9 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
       indExpRaw <- Option(ctx.expression(0));
       indExp <- indExpRaw.accept(this).asInstanceOf[Option[Expression]];
       valExpRaw <- Option(ctx.expression(1));
-      valExp <- valExpRaw.accept(this).asInstanceOf[Option[Expression]]
-    ) yield ArrayAssignmentStatement(id, indExp, valExp)
+      valExp <- valExpRaw.accept(this).asInstanceOf[Option[Expression]];
+      lineNumber <- Option(ctx.start.getLine)
+    ) yield ArrayAssignmentStatement(id, indExp, valExp, lineNumber)
   }
 
   override def visitBinaryOperationExpression(ctx: MiniJavaParser.BinaryOperationExpressionContext): Option[ASTNode] = {
@@ -207,8 +209,10 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
       arrExpRaw <- Option(ctx.expression(0));
       arrExp <- arrExpRaw.accept(this).asInstanceOf[Option[Expression]];
       indExpRaw <- Option(ctx.expression(1));
-      indExp <- indExpRaw.accept(this).asInstanceOf[Option[Expression]]
-    ) yield ArrayAccessExpression(arrExp, indExp)
+      indExp <- indExpRaw.accept(this).asInstanceOf[Option[Expression]];
+      lineNumber <- Option(ctx.start.getLine);
+      columnNumber <- Option(ctx.start.getCharPositionInLine)
+    ) yield ArrayAccessExpression(arrExp, indExp, lineNumber, columnNumber)
   }
 
   override def visitArrayLengthExpression(ctx: MiniJavaParser.ArrayLengthExpressionContext): Option[ASTNode] = {
@@ -258,8 +262,10 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
   override def visitNewIntArrayExpression(ctx: MiniJavaParser.NewIntArrayExpressionContext): Option[ASTNode] = {
     for (
       e <- Option(ctx.expression());
-      exp <- e.accept(this).asInstanceOf[Option[Expression]]
-    ) yield NewIntArrayExpression(exp)
+      exp <- e.accept(this).asInstanceOf[Option[Expression]];
+      lineNumber <- Option(ctx.start.getLine);
+      columnNumber <- Option(ctx.start.getCharPositionInLine)
+    ) yield NewIntArrayExpression(exp, lineNumber, columnNumber)
   }
 
   override def visitNewObjectExpression(ctx: MiniJavaParser.NewObjectExpressionContext): Option[ASTNode] = {
@@ -271,8 +277,10 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
   override def visitNegationExpression(ctx: MiniJavaParser.NegationExpressionContext): Option[ASTNode] = {
     for (
       e <- Option(ctx.expression());
-      exp <- e.accept(this).asInstanceOf[Option[Expression]]
-    ) yield NegatedExpression(exp)
+      exp <- e.accept(this).asInstanceOf[Option[Expression]];
+      lineNumber <- Option(ctx.start.getLine);
+      columnNumber <- Option(ctx.start.getCharPositionInLine)
+    ) yield NegatedExpression(exp, lineNumber, columnNumber)
   }
 
   override def visitParenedExpression(ctx: MiniJavaParser.ParenedExpressionContext): Option[ASTNode] = {

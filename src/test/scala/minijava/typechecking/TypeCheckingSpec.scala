@@ -139,7 +139,7 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     typeTable.get("Fac").isDefined shouldBe true
   }
 
-  /*it should "pass the BinarySearch example" in {
+  it should "pass the BinarySearch example" in {
     val input = Main.readFile("examples/BinarySearch.minijava")
 
     val ast = Main.parseString(input)
@@ -152,6 +152,44 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
 
     val typeTable = typeCheckResult.right.get
 
+    typeTable.get("BinarySearch").isDefined shouldBe true
     typeTable.get("BS").isDefined shouldBe true
-  }*/
+  }
+
+  it should "pass the BubbleSort example" in {
+    val input = Main.readFile("examples/BubbleSort.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    typeTable.get("BubbleSort").isDefined shouldBe true
+    typeTable.get("BBS").isDefined shouldBe true
+  }
+
+  it should "pass the TreeVisitor example" in {
+    val input = Main.readFile("examples/TreeVisitor.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    typeTable.get("TreeVisitor").isDefined shouldBe true
+    typeTable.get("TV").isDefined shouldBe true
+    typeTable.get("Tree").isDefined shouldBe true
+    typeTable.get("Visitor").isDefined shouldBe true
+    typeTable.get("MyVisitor").isDefined shouldBe true
+  }
 }

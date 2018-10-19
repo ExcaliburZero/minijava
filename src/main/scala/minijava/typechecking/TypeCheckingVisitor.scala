@@ -14,15 +14,21 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     typeCheckingErrors.toList
   }
 
-  override def visitStatementBlock(statementBlock: StatementBlock, a: TypeVisitorContext): TypeDefinition = super.visitStatementBlock(statementBlock, a)
+  override def visitStatementBlock(statementBlock: StatementBlock, a: TypeVisitorContext): TypeDefinition = {
+    for (s <- statementBlock.statements) {
+      visit(s, a)
+    }
+
+    PrimitiveVoidType
+  }
 
   override def visitIfStatement(ifStatement: IfStatement, a: TypeVisitorContext): TypeDefinition = {
     val conditionType = visit(ifStatement.condition, a)
 
     val location = LineNumber(ifStatement.line)
     
-    if (conditionType != PrimitiveBooleanType) {
-      failTypeCheck(conditionType, PrimitiveBooleanType, a.typeTable, location, "if statement")
+    if (TypeDefinition.conformsTo(conditionType, PrimitiveBooleanType, a.typeTable).isEmpty) {
+      failTypeCheck(conditionType, PrimitiveBooleanType, a.typeTable, location, "if statement condition")
     }
 
     visit(ifStatement.thenClause, a)
@@ -31,7 +37,19 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     PrimitiveVoidType
   }
 
-  override def visitWhileStatement(whileStatement: WhileStatement, a: TypeVisitorContext): TypeDefinition = super.visitWhileStatement(whileStatement, a)
+  override def visitWhileStatement(whileStatement: WhileStatement, a: TypeVisitorContext): TypeDefinition = {
+    val conditionType = visit(whileStatement.condition, a)
+
+    val location = LineNumber(whileStatement.line)
+
+    if (TypeDefinition.conformsTo(conditionType, PrimitiveBooleanType, a.typeTable).isEmpty) {
+      failTypeCheck(conditionType, PrimitiveBooleanType, a.typeTable, location, "while statement condition")
+    }
+
+    visit(whileStatement.statement, a)
+
+    PrimitiveVoidType
+  }
 
   override def visitPrintStatement(printStatement: PrintStatement, a: TypeVisitorContext): TypeDefinition = {
     val expressionType = visit(printStatement.expression, a)
@@ -39,9 +57,11 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     val location = LineNumber(printStatement.line)
 
     TypeDefinition.conformsTo(expressionType, PrimitiveIntType, a.typeTable) match {
-      case Some(t) => t
+      case Some(t) =>
       case None => failTypeCheck(expressionType, PrimitiveIntType, a.typeTable, location, "print statement")
     }
+
+    PrimitiveVoidType
   }
 
   override def visitAssignmentStatement(assignmentStatement: AssignmentStatement, a: TypeVisitorContext): TypeDefinition = {
@@ -56,7 +76,32 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     }
   }
 
-  override def visitArrayAssignmentStatement(arrayAssignmentStatement: ArrayAssignmentStatement, a: TypeVisitorContext): TypeDefinition = super.visitArrayAssignmentStatement(arrayAssignmentStatement, a)
+  override def visitArrayAssignmentStatement(arrayAssignmentStatement: ArrayAssignmentStatement, a: TypeVisitorContext): TypeDefinition = {
+    val indexType = visit(arrayAssignmentStatement.indexExpression, a)
+
+    val location = LineNumber(arrayAssignmentStatement.line)
+
+    TypeDefinition.conformsTo(indexType, PrimitiveIntType, a.typeTable) match {
+      case Some(t) => t
+      case None => failTypeCheck(indexType, PrimitiveIntType, a.typeTable, location, "array assignment index expression")
+    }
+
+    val valueType = visit(arrayAssignmentStatement.valueExpression, a)
+
+    TypeDefinition.conformsTo(valueType, PrimitiveIntType, a.typeTable) match {
+      case Some(t) => t
+      case None => failTypeCheck(indexType, PrimitiveIntType, a.typeTable, location, "array assignment value expression")
+    }
+
+    val arrayType = getVarType(arrayAssignmentStatement.name.name, a)
+
+    TypeDefinition.conformsTo(arrayType, PrimitiveIntArrayType, a.typeTable) match {
+      case Some(t) => t
+      case None => failTypeCheck(arrayType, PrimitiveIntArrayType, a.typeTable, location, "array assignment statement")
+    }
+
+    PrimitiveVoidType
+  }
 
   override def visitBinaryOperationExpression(binaryOperationExpression: BinaryOperationExpression, a: TypeVisitorContext): TypeDefinition = {
     val firstType = visit(binaryOperationExpression.firstExpression, a)
@@ -99,7 +144,29 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     ???
   }
 
-  override def visitArrayAccessExpression(arrayAccessExpression: ArrayAccessExpression, a: TypeVisitorContext): TypeDefinition = super.visitArrayAccessExpression(arrayAccessExpression, a)
+  override def visitArrayAccessExpression(arrayAccessExpression: ArrayAccessExpression, a: TypeVisitorContext): TypeDefinition = {
+    val indexType = visit(arrayAccessExpression.indexExpression, a)
+
+    val location = LineColumn(arrayAccessExpression.line, arrayAccessExpression.column)
+
+    val resultingIndexType = TypeDefinition.conformsTo(indexType, PrimitiveIntType, a.typeTable) match {
+      case Some(t) => t
+      case None => failTypeCheck(indexType, PrimitiveIntType, a.typeTable, location, "array access index expression")
+    }
+
+    val arrayType = visit(arrayAccessExpression.arrayExpression, a)
+
+    val resultingArrayType = TypeDefinition.conformsTo(arrayType, PrimitiveIntArrayType, a.typeTable) match {
+      case Some(t) => t
+      case None => failTypeCheck(arrayType, PrimitiveIntArrayType, a.typeTable, location, "array access expression")
+    }
+
+    if (resultingIndexType == FailType || resultingArrayType == FailType) {
+      FailType
+    } else {
+      PrimitiveIntType
+    }
+  }
 
   override def visitArrayLengthExpression(arrayLengthExpression: ArrayLengthExpression, a: TypeVisitorContext): TypeDefinition = {
     PrimitiveIntType
@@ -145,7 +212,16 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     a.curClass
   }
 
-  override def visitNewIntArrayExpression(intArrayExpression: NewIntArrayExpression, a: TypeVisitorContext): TypeDefinition = super.visitNewIntArrayExpression(intArrayExpression, a)
+  override def visitNewIntArrayExpression(intArrayExpression: NewIntArrayExpression, a: TypeVisitorContext): TypeDefinition = {
+    val lengthType = visit(intArrayExpression.lengthExpression, a)
+
+    val location = LineColumn(intArrayExpression.line, intArrayExpression.column)
+
+    TypeDefinition.conformsTo(lengthType, PrimitiveIntType, a.typeTable) match {
+      case Some(t) => PrimitiveIntArrayType
+      case None => failTypeCheck(lengthType, PrimitiveIntType, a.typeTable, location, "new int array expression")
+    }
+  }
 
   override def visitNewObjectExpression(newObjectExpression: NewObjectExpression, a: TypeVisitorContext): TypeDefinition = {
     // TODO: What about constructor parameters?
@@ -158,7 +234,16 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     }
   }
 
-  override def visitNegatedExpression(negatedExpression: NegatedExpression, a: TypeVisitorContext): TypeDefinition = super.visitNegatedExpression(negatedExpression, a)
+  override def visitNegatedExpression(negatedExpression: NegatedExpression, a: TypeVisitorContext): TypeDefinition = {
+    val expressionType = visit(negatedExpression.expression, a)
+
+    val location = LineColumn(negatedExpression.line, negatedExpression.column)
+
+    TypeDefinition.conformsTo(expressionType, PrimitiveBooleanType, a.typeTable) match {
+      case Some(t) => t
+      case None => failTypeCheck(expressionType, PrimitiveBooleanType, a.typeTable, location, "negated expression")
+    }
+  }
 
   override def visitParenedExpression(parenedExpression: ParenedExpression, a: TypeVisitorContext): TypeDefinition = {
     visit(parenedExpression.expression, a)
@@ -184,7 +269,26 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
       case None =>
     }
 
-    ???
+    getVarTypeClass(name, context.curClass, context.typeTable)
+  }
+
+  private def getVarTypeClass(name: String, classLikeType: ClassLikeType, typeTable: TypeTable): TypeDefinition = {
+    val classNameMatches = classLikeType.getVariables()
+      .filter(cv => cv.name == name)
+
+    classNameMatches.headOption match {
+      case Some(t) => return typeTable.get(t.typeName).get
+      case None =>
+    }
+
+    classLikeType.getParentClass() match {
+      case Some(p) =>
+        typeTable.get(p).get match {
+          case parent: ClassLikeType => getVarTypeClass(name, parent, typeTable)
+          case _ => ???
+        }
+      case None => ???
+    }
   }
 
   def failTypeCheck(actualType: TypeDefinition, expectedType: TypeDefinition, typeTable: TypeTable, location: Location, context: String): TypeDefinition = {
