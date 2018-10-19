@@ -3,6 +3,7 @@ package minijava.typechecking
 import minijava.grammar._
 import minijava.messages._
 
+import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
 
 case class TypeVisitorContext(typeTable: TypeTable, curClass: ClassLikeType, curMethod: Method)
@@ -272,6 +273,7 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     getVarTypeClass(name, context.curClass, context.typeTable)
   }
 
+  @tailrec
   private def getVarTypeClass(name: String, classLikeType: ClassLikeType, typeTable: TypeTable): TypeDefinition = {
     val classNameMatches = classLikeType.getVariables()
       .filter(cv => cv.name == name)

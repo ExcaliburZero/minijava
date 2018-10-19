@@ -192,4 +192,75 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     typeTable.get("Visitor").isDefined shouldBe true
     typeTable.get("MyVisitor").isDefined shouldBe true
   }
+
+  it should "pass the QuickSort example" in {
+    val input = Main.readFile("examples/QuickSort.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    typeTable.get("QuickSort").isDefined shouldBe true
+    typeTable.get("QS").isDefined shouldBe true
+  }
+
+  it should "pass the LinearSearch example" in {
+    val input = Main.readFile("examples/LinearSearch.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    typeTable.get("LinearSearch").isDefined shouldBe true
+    typeTable.get("LS").isDefined shouldBe true
+  }
+
+  it should "pass the LinkedList example" in {
+    val input = Main.readFile("examples/LinkedList.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    typeTable.get("LinkedList").isDefined shouldBe true
+    typeTable.get("Element").isDefined shouldBe true
+    typeTable.get("List").isDefined shouldBe true
+    typeTable.get("LL").isDefined shouldBe true
+  }
+
+  it should "pass the BinaryTree example" in {
+    val input = Main.readFile("examples/BinaryTree.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    typeTable.get("BinaryTree").isDefined shouldBe true
+    typeTable.get("BT").isDefined shouldBe true
+    typeTable.get("Tree").isDefined shouldBe true
+  }
 }
