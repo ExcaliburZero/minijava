@@ -1,0 +1,19 @@
+class Factorial{
+    public static io void main(String[] a){
+        System.out.println(new Fac().ComputeFac(10));
+    }
+}
+
+class Fac {
+
+    public int ComputeFac(int num){
+        boolean num_aux ;
+
+        num_aux = false;
+        num_aux = !false;
+        num_aux = !2;
+
+        return 2 ;
+    }
+
+}

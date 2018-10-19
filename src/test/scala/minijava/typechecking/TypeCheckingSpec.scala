@@ -292,6 +292,67 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     errors shouldBe expected
   }
 
+  it should "fail when incorrect types are used in a array access expression" in {
+    val input = Main.readFile("examples/ArrayAccessTypeError.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineColumn(17, 16)), "Incompatible types in array access index expression.\nExpected:  int\nFound:     boolean"),
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineColumn(18, 16)), "Incompatible types in array access expression.\nExpected:  int[]\nFound:     int")
+    )
+
+    errors shouldBe expected
+  }
+
+  it should "fail when an incorrect type is used for the length of a new int array" in {
+    val input = Main.readFile("examples/NewIntArrayTypeError.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineColumn(12, 19)), "Incompatible types in new int array expression.\nExpected:  int\nFound:     boolean")
+    )
+
+    errors shouldBe expected
+  }
+
+  it should "fail when an incorrect type is used in a negated expression" in {
+    val input = Main.readFile("examples/NegatedExpressionTypeError.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineColumn(14, 18)), "Incompatible types in negated expression.\nExpected:  boolean\nFound:     int")
+    )
+
+    errors shouldBe expected
+  }
+
   it should "fail when an operator is used with a wrong parameter type" in {
     val input = Main.readFile("examples/PlusBoolean.minijava")
 
