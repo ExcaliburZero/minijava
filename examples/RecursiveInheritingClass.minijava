@@ -1,0 +1,26 @@
+class Factorial{
+    public static io void main(String[] a){
+        System.out.println(new Fac().ComputeFac(10));
+    }
+}
+
+class Fac {
+
+    public int ComputeFac(int num){
+        int num_aux ;
+        A a;
+
+        a = new A();
+        return a.hi(num, a) ;
+    }
+
+}
+
+class A extends A {
+    public int hi(int a, B other) {
+        return a + 1;
+    }
+}
+
+class B {
+}

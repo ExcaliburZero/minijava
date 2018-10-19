@@ -108,8 +108,8 @@ class TypeTable {
     lookupTable.get(typeName)
   }
 
-  def types(): Iterable[TypeDefinition] = {
-    lookupTable.values
+  def types(): List[TypeDefinition] = {
+    lookupTable.values.toList
   }
 
   override def toString(): String = {

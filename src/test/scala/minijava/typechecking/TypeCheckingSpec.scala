@@ -146,6 +146,48 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     errors shouldBe expected
   }
 
+  it should "fail when a class extends itself" in {
+    val input = Main.readFile("examples/RecursiveInheritingClass.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, None, "Circular inheritance found for class A, repeating at class A")
+    )
+
+    errors shouldBe expected
+  }
+
+  it should "fail when a set of classes form a cyclic inheritance" in {
+    val input = Main.readFile("examples/RecursiveInheritingClassCycle.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, None, "Circular inheritance found for class A, repeating at class A"),
+      CompilerMessage(CompilerError, TypeCheckingError, None, "Circular inheritance found for class B, repeating at class B"),
+      CompilerMessage(CompilerError, TypeCheckingError, None, "Circular inheritance found for class C, repeating at class C")
+    )
+
+    errors shouldBe expected
+  }
+
   it should "report multiple type checking errors when multiple are present" in {
     val input = Main.readFile("examples/MultTypeErrors.minijava")
 

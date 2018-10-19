@@ -24,7 +24,37 @@ class TypeExtractionVisitor extends ASTVisitor[Unit, Unit] {
   private val typeCheckingErrors = new ArrayBuffer[CompilerMessage]()
 
   def getTypeTable(): (TypeTable, List[CompilerMessage]) = {
+    for (t <- typeTable.types().sortBy(_.getName())) {
+      checkForCircularInheritance(t.getName(), t, List(), typeTable)
+    }
+
     (typeTable, typeCheckingErrors.toList)
+  }
+
+  private def checkForCircularInheritance(startClass: String, t: TypeDefinition, seen: List[String], typeTable: TypeTable): Unit = {
+    t match {
+      case classLikeType: ClassLikeType =>
+        val newSeen = t.getName() :: seen
+
+        classLikeType.getParentClass() match {
+          case None =>
+          case Some(parent) =>
+            if (newSeen.contains(parent)) {
+              val message = "Circular inheritance found for class %s, repeating at class %s".format(startClass, parent)
+
+              val compilerMessage = CompilerMessage(CompilerError, TypeCheckingError, None,
+                message)
+
+              typeCheckingErrors.append(compilerMessage)
+            } else {
+              typeTable.get(parent) match {
+                case Some(p) => checkForCircularInheritance(startClass, p, newSeen, typeTable)
+                case None => ???
+              }
+            }
+        }
+      case _ =>
+    }
   }
 
   override def visitGoal(goal: Goal, a: Unit): Unit = {
