@@ -92,7 +92,7 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
 
     TypeDefinition.conformsTo(valueType, PrimitiveIntType, a.typeTable) match {
       case Some(t) => t
-      case None => failTypeCheck(indexType, PrimitiveIntType, a.typeTable, location, "array assignment value expression")
+      case None => failTypeCheck(valueType, PrimitiveIntType, a.typeTable, location, "array assignment value expression")
     }
 
     val arrayType = getVarType(arrayAssignmentStatement.name.name, a, location)

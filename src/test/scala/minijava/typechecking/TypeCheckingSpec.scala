@@ -230,6 +230,68 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     errors shouldBe expected
   }
 
+  it should "fail when a non-boolean value is used in an if statement conditional" in {
+    val input = Main.readFile("examples/IfStatementConditionTypeError.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(11)), "Incompatible types in if statement condition.\nExpected:  boolean\nFound:     int")
+    )
+
+    errors shouldBe expected
+  }
+
+  it should "fail when a non-boolean value is used in a while loop conditional" in {
+    val input = Main.readFile("examples/WhileLoopConditionTypeError.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(16)), "Incompatible types in while statement condition.\nExpected:  boolean\nFound:     int")
+    )
+
+    errors shouldBe expected
+  }
+
+  it should "fail when incorrect types are used in a array assignment statement" in {
+    val input = Main.readFile("examples/ArrayAssignmentTypeError.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(13)), "Incompatible types in array assignment index expression.\nExpected:  int\nFound:     boolean"),
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(15)), "Incompatible types in array assignment value expression.\nExpected:  int\nFound:     boolean"),
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(16)), "Incompatible types in array assignment statement.\nExpected:  int[]\nFound:     int")
+    )
+
+    errors shouldBe expected
+  }
+
   it should "fail when an operator is used with a wrong parameter type" in {
     val input = Main.readFile("examples/PlusBoolean.minijava")
 
