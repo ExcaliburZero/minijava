@@ -637,4 +637,41 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
 
     typeTable.get("HelloOne").isDefined shouldBe true
   }
+
+  it should "pass a program with valid method overloading" in {
+    val input = Main.readFile("examples/ValidOverloading.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    typeTable.get("Factorial").isDefined shouldBe true
+    typeTable.get("Fac").isDefined shouldBe true
+  }
+
+  it should "fail when a method is overloaded on return type" in {
+    val input = Main.readFile("examples/InvalidOverloading.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, None, "Multiple methods \"ComputeFac(int)\" exist for class \"Fac\":\n\nboolean ComputeFac(int)\nint ComputeFac(int)\n\nNote that overloading based on return type is not allowed.")
+    )
+
+    errors shouldBe expected
+  }
 }
