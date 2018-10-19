@@ -73,7 +73,8 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
 
     TypeDefinition.conformsTo(expressionType, variableType, a.typeTable) match {
       case Some(t) => t
-      case None => failTypeCheck(expressionType, variableType, a.typeTable, location, "assignment statement")
+      case None => failTypeCheck(expressionType, variableType, a.typeTable, location,
+        "assignment statement for variable \"%s\"".format(assignmentStatement.name.name))
     }
   }
 

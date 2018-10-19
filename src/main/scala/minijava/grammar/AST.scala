@@ -12,9 +12,9 @@ case class RegularClass(name: Identifier, parentClass: Option[Identifier], varia
 
 //case class ClassDeclaration(name: Identifier, parentClass: Option[Identifier], variableDeclarations: List[VariableDeclaration], methodDeclarations: List[MethodDeclaration], line: Int) extends ASTNode
 
-case class VariableDeclaration(varType: Type, name: Identifier) extends ASTNode
+case class VariableDeclaration(varType: Type, name: Identifier, line: Int) extends ASTNode
 
-case class MethodDeclaration(isIO: Boolean, varType: Type, name: Identifier, parameters: List[(Type, Identifier)], variableDeclarations: List[VariableDeclaration], statements: List[Statement], returnExpression: Expression) extends ASTNode
+case class MethodDeclaration(isIO: Boolean, varType: Type, name: Identifier, parameters: List[(Type, Identifier)], variableDeclarations: List[VariableDeclaration], statements: List[Statement], returnExpression: Expression, line: Int) extends ASTNode
 
 sealed trait Type extends ASTNode
 case object IntArrayType extends Type

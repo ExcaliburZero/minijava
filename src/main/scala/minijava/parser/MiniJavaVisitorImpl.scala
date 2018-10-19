@@ -69,8 +69,9 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
       varTypeRaw <- Option(ctx.`type`());
       varType <- varTypeRaw.accept(this).asInstanceOf[Option[Type]];
       idRaw <- Option(ctx.IDENTIFIER());
-      id = Identifier(idRaw.getSymbol.getText)
-    ) yield VariableDeclaration(varType, id)
+      id = Identifier(idRaw.getSymbol.getText);
+      lineNumber <- Option(ctx.start.getLine)
+    ) yield VariableDeclaration(varType, id, lineNumber)
   }
 
   override def visitMethodDeclaration(ctx: MiniJavaParser.MethodDeclarationContext): Option[ASTNode] = {
@@ -100,8 +101,9 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
           _.asInstanceOf[MiniJavaParser.StatementContext].accept(this).asInstanceOf[Option[Statement]]
         ).toList.sequence;
       retExpRaw <- Option(ctx.expression());
-      retExp <- retExpRaw.accept(this).asInstanceOf[Option[Expression]]
-    ) yield MethodDeclaration(isIo, varType, name, parameters, varDecs, statmts, retExp)
+      retExp <- retExpRaw.accept(this).asInstanceOf[Option[Expression]];
+      lineNumber <- Option(ctx.start.getLine)
+    ) yield MethodDeclaration(isIo, varType, name, parameters, varDecs, statmts, retExp, lineNumber)
   }
 
   override def visitIntArrayType(ctx: MiniJavaParser.IntArrayTypeContext): Option[ASTNode] = {

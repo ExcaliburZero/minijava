@@ -1,0 +1,22 @@
+class Factorial{
+    public static io void main(String[] a){
+        System.out.println(new Fac().ComputeFac(10));
+    }
+}
+
+class Fac {
+
+    public int ComputeFac(int num){
+        int num_aux ;
+        boolean num_aux2 ;
+
+        num_aux = true;
+        num_aux2 = true;
+        num_aux2 = 23;
+
+        num_aux = 23 + true;
+
+        return num_aux ;
+    }
+
+}
