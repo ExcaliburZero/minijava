@@ -66,10 +66,10 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
   }
 
   override def visitAssignmentStatement(assignmentStatement: AssignmentStatement, a: TypeVisitorContext): TypeDefinition = {
-    val expressionType = visit(assignmentStatement.expression, a)
-    val variableType = getVarType(assignmentStatement.name.name, a)
-
     val location = LineNumber(assignmentStatement.line)
+
+    val expressionType = visit(assignmentStatement.expression, a)
+    val variableType = getVarType(assignmentStatement.name.name, a, location)
 
     TypeDefinition.conformsTo(expressionType, variableType, a.typeTable) match {
       case Some(t) => t
@@ -95,7 +95,7 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
       case None => failTypeCheck(indexType, PrimitiveIntType, a.typeTable, location, "array assignment value expression")
     }
 
-    val arrayType = getVarType(arrayAssignmentStatement.name.name, a)
+    val arrayType = getVarType(arrayAssignmentStatement.name.name, a, location)
 
     TypeDefinition.conformsTo(arrayType, PrimitiveIntArrayType, a.typeTable) match {
       case Some(t) => t
@@ -207,7 +207,9 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
   }
 
   override def visitIdentifierExpression(identifierExpression: IdentifierExpression, a: TypeVisitorContext): TypeDefinition = {
-    getVarType(identifierExpression.name.name, a)
+    val location = LineColumn(identifierExpression.line, identifierExpression.column)
+
+    getVarType(identifierExpression.name.name, a, location)
   }
 
   override def visitThisLiteral(a: TypeVisitorContext): TypeDefinition = {
@@ -251,10 +253,7 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     visit(parenedExpression.expression, a)
   }
 
-  def getVarType(name: String, context: TypeVisitorContext): TypeDefinition = {
-    // TODO: somewhere check for shadowed names
-    //context.curMethod.parameters ++ context.curMethod.localVariables
-
+  def getVarType(name: String, context: TypeVisitorContext, location: Location): TypeDefinition = {
     val localNameMatches = context.curMethod.localVariables
       .filter(lv => lv.name == name)
 
@@ -271,11 +270,11 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
       case None =>
     }
 
-    getVarTypeClass(name, context.curClass, context.typeTable)
+    getVarTypeClass(name, context.curClass, context.typeTable, location)
   }
 
   @tailrec
-  private def getVarTypeClass(name: String, classLikeType: ClassLikeType, typeTable: TypeTable): TypeDefinition = {
+  private def getVarTypeClass(name: String, classLikeType: ClassLikeType, typeTable: TypeTable, location: Location): TypeDefinition = {
     val classNameMatches = classLikeType.getVariables()
       .filter(cv => cv.name == name)
 
@@ -287,10 +286,10 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     classLikeType.getParentClass() match {
       case Some(p) =>
         typeTable.get(p).get match {
-          case parent: ClassLikeType => getVarTypeClass(name, parent, typeTable)
-          case _ => ???
+          case parent: ClassLikeType => getVarTypeClass(name, parent, typeTable, location)
+          case _ => ??? // The parent is not a class
         }
-      case None => ???
+      case None => failVariableNotFound(name, location)
     }
   }
 
@@ -309,6 +308,17 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     val message = ???
 
     ???
+  }
+
+  def failVariableNotFound(name: String, location: Location): TypeDefinition = {
+    val message = "Unknown variable \"%s\", perhaps it has not been declared.".format(name)
+
+    val typeCheckError = CompilerMessage(CompilerError, TypeCheckingError, Some(location),
+      message)
+
+    typeCheckingErrors.append(typeCheckError)
+
+    FailType
   }
 
   def getMatchingMethod(objectType: ClassLikeType, methodName: String, parameterTypes: List[TypeDefinition], a: TypeVisitorContext): Option[Method] = {

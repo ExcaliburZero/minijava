@@ -314,6 +314,28 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     errors shouldBe expected
   }
 
+  it should "fail when a variable is used without being declared" in {
+    val input = Main.readFile("examples/MissingDeclaration.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(11)), "Unknown variable \"num_aux\", perhaps it has not been declared."),
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(13)), "Unknown variable \"num_aux\", perhaps it has not been declared."),
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineColumn(14, 15)), "Unknown variable \"num_aux\", perhaps it has not been declared.")
+    )
+
+    errors shouldBe expected
+  }
+
   it should "pass the Factorial example" in {
     val input = Main.readFile("examples/Factorial.minijava")
 

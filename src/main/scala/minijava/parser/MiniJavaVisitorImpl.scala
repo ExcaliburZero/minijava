@@ -253,8 +253,10 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
 
   override def visitIdentifierExpression(ctx: MiniJavaParser.IdentifierExpressionContext): Option[ASTNode] = {
     for (
-      id <- Option(ctx.IDENTIFIER())
-    ) yield IdentifierExpression(Identifier(id.getSymbol.getText))
+      id <- Option(ctx.IDENTIFIER());
+      lineNumber <- Option(ctx.start.getLine);
+      columnNumber <- Option(ctx.start.getCharPositionInLine)
+    ) yield IdentifierExpression(Identifier(id.getSymbol.getText), lineNumber, columnNumber)
   }
 
   override def visitThis(ctx: MiniJavaParser.ThisContext): Option[ASTNode] = {
