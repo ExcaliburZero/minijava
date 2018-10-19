@@ -56,4 +56,17 @@ class ASTSpec extends FlatSpec with Matchers {
 
     output.left.get shouldBe List(CompilerMessage(CompilerError, ParsingError, Some(LineColumn(20, 6)), "mismatched input 'boolean' expecting IDENTIFIER"))
   }
+
+  it should "fail with a class extends a primitive" in {
+    val input = Main.readFile("examples/InheritPrimitive.minijava")
+
+    val output = Main.parseString(input)
+
+    output.isLeft shouldBe true
+
+    output.left.get shouldBe List(
+      CompilerMessage(CompilerError, ParsingError, Some(LineColumn(20, 16)), "mismatched input 'int' expecting IDENTIFIER"),
+      CompilerMessage(CompilerError, ParsingError, Some(LineColumn(21, 16)), "mismatched input 'boolean' expecting IDENTIFIER")
+    )
+  }
 }

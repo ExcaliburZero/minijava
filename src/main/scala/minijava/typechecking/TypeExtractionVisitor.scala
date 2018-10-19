@@ -49,7 +49,8 @@ class TypeExtractionVisitor extends ASTVisitor[Unit, Unit] {
             } else {
               typeTable.get(parent) match {
                 case Some(p) => checkForCircularInheritance(startClass, p, newSeen, typeTable)
-                case None => ???
+                case None => if (startClass == t.getName())
+                  failParentClassDoesNotExist(t.getName(), parent)
               }
             }
         }
@@ -228,6 +229,15 @@ class TypeExtractionVisitor extends ASTVisitor[Unit, Unit] {
     val message = "Attempt to create a %s \"%s\" with reserved type \"FAIL\"".format(context, variableName)
 
     val compilerMessage = CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(lineNumber)),
+      message)
+
+    typeCheckingErrors.append(compilerMessage)
+  }
+
+  private def failParentClassDoesNotExist(className: String, parentName: String): Unit = {
+    val message = "Class \"%s\" extends unknown class \"%s\".".format(className, parentName)
+
+    val compilerMessage = CompilerMessage(CompilerError, TypeCheckingError, None,
       message)
 
     typeCheckingErrors.append(compilerMessage)

@@ -188,6 +188,27 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     errors shouldBe expected
   }
 
+  it should "fail when classes extend class that do not exist" in {
+    val input = Main.readFile("examples/ExtendClassDoesNotExist.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, None, "Class \"A\" extends unknown class \"Foo\"."),
+      CompilerMessage(CompilerError, TypeCheckingError, None, "Class \"C\" extends unknown class \"Bar\".")
+    )
+
+    errors shouldBe expected
+  }
+
   it should "report multiple type checking errors when multiple are present" in {
     val input = Main.readFile("examples/MultTypeErrors.minijava")
 
