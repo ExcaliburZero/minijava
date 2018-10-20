@@ -674,4 +674,44 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
 
     errors shouldBe expected
   }
+
+  it should "fail when a method is overloaded on return type via a parent class" in {
+    val input = Main.readFile("examples/InvalidOverloadingInherit.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, None, "Multiple methods \"ComputeFac(int)\" exist for class \"Fac\":\n\nboolean ComputeFac(int)\nint ComputeFac(int)\n\nNote that overloading based on return type is not allowed.")
+    )
+
+    errors shouldBe expected
+  }
+
+  it should "fail when a method declared multiple times for the same class" in {
+    val input = Main.readFile("examples/DuplicateMethodDeclaration.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, None, "Duplicate declaration(s) of method \"int ComputeFac(int)\" for class \"Fac\".")
+    )
+
+    errors shouldBe expected
+  }
 }
