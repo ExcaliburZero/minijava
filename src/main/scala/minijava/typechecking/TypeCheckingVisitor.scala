@@ -349,10 +349,16 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
 
     val classParamMatches = classNameMatches.filter(m => {
       val mParamTypes = m.parameters.map(p => a.typeTable.get(p.typeName).get)
-      val paramMatches = for ((mt, pt) <- mParamTypes.zip(parameterTypes))
-        yield TypeDefinition.conformsTo(pt, mt, a.typeTable).isEmpty
 
-      paramMatches.isEmpty || paramMatches.contains(false)
+      if (mParamTypes.length == parameterTypes.length) {
+        val pairs = mParamTypes.zip(parameterTypes)
+        val paramMatches = for ((mt, pt) <- pairs)
+          yield TypeDefinition.conformsTo(pt, mt, a.typeTable).isDefined
+
+        paramMatches.isEmpty || !paramMatches.contains(false)
+      } else {
+        false
+      }
     })
 
     classParamMatches.headOption match {
