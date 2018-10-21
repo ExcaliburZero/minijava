@@ -13,7 +13,7 @@ object TypeChecking {
       return Left(duplicateTypeErrors)
     }
 
-    val unknownTypeErrors = checkForUnknownTypesInLocalsAndParameters(typeTable)
+    val unknownTypeErrors = checkForUnknownTypes(typeTable)
     val duplicateMethodErrors = checkForDuplicateMethods(typeTable)
 
     val stage2Errors = unknownTypeErrors ++ duplicateMethodErrors
@@ -176,7 +176,7 @@ object TypeChecking {
     method.returnExpression.foreach(e => visitor.visit(e, context))
   }
 
-  private def checkForUnknownTypesInLocalsAndParameters(typeTable: TypeTable): List[CompilerMessage] = {
+  private def checkForUnknownTypes(typeTable: TypeTable): List[CompilerMessage] = {
     val errors = new ArrayBuffer[CompilerMessage]()
 
     for (t <- typeTable.types()) {
@@ -195,6 +195,12 @@ object TypeChecking {
               }
             }
           })
+
+          for (v <- classType.variables) {
+            if (typeTable.get(v.typeName).isEmpty) {
+              failUnknownClassVariableType(v, classType, errors)
+            }
+          }
         case _ =>
       }
     }
@@ -205,6 +211,15 @@ object TypeChecking {
   private def failUnknownVariableType(variable: Variable, context: String, method: Method, classLikeType: ClassLikeType, errors: ArrayBuffer[CompilerMessage]): Unit = {
     val message = "Unknown type \"%s\" for %s \"%s\" in method \"%s\" of class \"%s\"."
       .format(variable.typeName, context, variable.name, method.name, classLikeType.getName())
+
+    val err = CompilerMessage(CompilerError, TypeCheckingError, None, message)
+
+    errors.append(err)
+  }
+
+  private def failUnknownClassVariableType(variable: Variable, classLikeType: ClassLikeType, errors: ArrayBuffer[CompilerMessage]): Unit = {
+    val message = "Unknown type \"%s\" for class variable \"%s\" in class \"%s\"."
+      .format(variable.typeName, variable.name, classLikeType.getName())
 
     val err = CompilerMessage(CompilerError, TypeCheckingError, None, message)
 

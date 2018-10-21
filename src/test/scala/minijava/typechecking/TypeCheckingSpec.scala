@@ -828,4 +828,24 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
 
     errors shouldBe expected
   }
+
+  it should "fail when a class variable is declared with an unknown type" in {
+    val input = Main.readFile("examples/ClassVariableUnknownType.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, None, "Unknown type \"a\" for class variable \"num_2\" in class \"Fac\".")
+    )
+
+    errors shouldBe expected
+  }
 }
