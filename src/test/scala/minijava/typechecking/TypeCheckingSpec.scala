@@ -832,4 +832,22 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
 
     errors shouldBe expected
   }
+
+  it should "pass a program with covariant overriding" in {
+    val input = Main.readFile("examples/CovariantOverride.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    typeTable.get("Factorial").isDefined shouldBe true
+    typeTable.get("Fac").isDefined shouldBe true
+    typeTable.get("A").isDefined shouldBe true
+  }
 }
