@@ -578,6 +578,26 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     errors shouldBe expected
   }
 
+  it should "fail when a method taking in an object is given a primitive" in {
+    val input = Main.readFile("examples/PassPrimitiveInsteadOfClass.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineColumn(3, 27)), "Method \"ComputeFac(int, int)\" called on object of class \"Fac\", but that method is not defined for that class.")
+    )
+
+    errors shouldBe expected
+  }
+
   it should "pass the Factorial example" in {
     val input = Main.readFile("examples/Factorial.minijava")
 
