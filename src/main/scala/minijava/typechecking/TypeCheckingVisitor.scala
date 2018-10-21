@@ -143,7 +143,8 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
       return FailType
     }
 
-    // An unknown operator was given. This should not be possible.
+    // An unknown operator was given. This should not be possible since the grammar only allows the use of known
+    // operators.
     ???
   }
 
@@ -233,9 +234,11 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
   override def visitNewObjectExpression(newObjectExpression: NewObjectExpression, a: TypeVisitorContext): TypeDefinition = {
     val className = newObjectExpression.className.name
 
+    val location = LineColumn(newObjectExpression.line, newObjectExpression.column)
+
     a.typeTable.get(className) match {
       case Some(t) => t
-      case None => ???
+      case None => failInstantiateUnknownClass(className, location)
     }
   }
 
@@ -288,7 +291,7 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
       case Some(p) =>
         typeTable.get(p).get match {
           case parent: ClassLikeType => getVarTypeClass(name, parent, typeTable, location)
-          case _ => ??? // The parent is not a class
+          case _ => ??? // The parent is not a class, this is handled in the (earlier) type extraction phase
         }
       case None => failVariableNotFound(name, location)
     }
@@ -319,6 +322,18 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
 
   def failVariableNotFound(name: String, location: Location): TypeDefinition = {
     val message = "Unknown variable \"%s\", perhaps it has not been declared.".format(name)
+
+    val typeCheckError = CompilerMessage(CompilerError, TypeCheckingError, Some(location),
+      message)
+
+    typeCheckingErrors.append(typeCheckError)
+
+    FailType
+  }
+
+  def failInstantiateUnknownClass(className: String, location: Location): TypeDefinition = {
+    val message = "Instantiation of unknown class \"%s\"."
+        .format(className)
 
     val typeCheckError = CompilerMessage(CompilerError, TypeCheckingError, Some(location),
       message)

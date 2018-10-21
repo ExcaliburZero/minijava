@@ -276,8 +276,10 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
 
   override def visitNewObjectExpression(ctx: MiniJavaParser.NewObjectExpressionContext): Option[ASTNode] = {
     for (
-      id <- Option(ctx.IDENTIFIER())
-    ) yield NewObjectExpression(Identifier(id.getSymbol.getText))
+      id <- Option(ctx.IDENTIFIER());
+      lineNumber <- Option(ctx.start.getLine);
+      columnNumber <- Option(ctx.start.getCharPositionInLine)
+    ) yield NewObjectExpression(Identifier(id.getSymbol.getText), lineNumber, columnNumber)
   }
 
   override def visitNegationExpression(ctx: MiniJavaParser.NegationExpressionContext): Option[ASTNode] = {

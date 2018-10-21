@@ -41,7 +41,7 @@ case object FalseLiteral extends Expression
 case class IdentifierExpression(name: Identifier, line: Int, column: Int) extends Expression
 case object ThisLiteral extends Expression
 case class NewIntArrayExpression(lengthExpression: Expression, line: Int, column: Int) extends Expression
-case class NewObjectExpression(className: Identifier) extends Expression
+case class NewObjectExpression(className: Identifier, line: Int, column: Int) extends Expression
 case class NegatedExpression(expression: Expression, line: Int, column: Int) extends Expression
 case class ParenedExpression(expression: Expression) extends Expression
 

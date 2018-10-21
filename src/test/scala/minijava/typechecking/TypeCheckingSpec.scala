@@ -538,6 +538,26 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     errors shouldBe expected
   }
 
+  it should "fail when an unknown class is instantiated" in {
+    val input = Main.readFile("examples/InstantiateUnknownClass.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineColumn(3, 27)), "Instantiation of unknown class \"Fac\".")
+    )
+
+    errors shouldBe expected
+  }
+
   it should "pass the Factorial example" in {
     val input = Main.readFile("examples/Factorial.minijava")
 
