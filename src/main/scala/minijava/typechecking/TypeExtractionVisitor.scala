@@ -13,7 +13,7 @@ object TypeExtractionVisitor {
     typeTable.add("int[]", PrimitiveIntArrayType)
     typeTable.add("boolean", PrimitiveBooleanType)
     typeTable.add("void", PrimitiveVoidType)
-    typeTable.add("FAIL", FailType)
+    typeTable.add("*FAIL", FailType)
 
     typeTable
   }
@@ -89,7 +89,7 @@ class TypeExtractionVisitor extends ASTVisitor[Unit, Unit] {
 
     val variables = regularClass.variableDeclarations.map(vd => {
       val t = typeToName(vd.varType)
-      if (t == "FAIL") {
+      if (t == "*FAIL") {
         addFAILVariableError(vd.line, vd.name.name, "class instance variable")
       }
 
@@ -100,14 +100,14 @@ class TypeExtractionVisitor extends ASTVisitor[Unit, Unit] {
       val isIO = md.isIO
       val returnType = typeToName(md.varType)
       val parameters = md.parameters.map(p => {
-        if (typeToName(p._1) == "FAIL") {
+        if (typeToName(p._1) == "*FAIL") {
           addFAILVariableError(md.line, p._2.name, "parameter")
         }
 
         Variable(p._2.name, typeToName(p._1))
       })
       val localVariables = md.variableDeclarations.map(p => {
-        if (typeToName(p.varType) == "FAIL") {
+        if (typeToName(p.varType) == "*FAIL") {
           addFAILVariableError(p.line, p.name.name, "local variable")
         }
 

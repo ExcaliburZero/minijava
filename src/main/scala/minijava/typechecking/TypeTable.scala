@@ -45,7 +45,7 @@ sealed trait TypeDefinition {
     this match {
       case ClassType(name, _, _, _) => name
       case MainClassType(name, _) => name
-      case FailType => "FAIL"
+      case FailType => "*FAIL"
       case PrimitiveIntArrayType => "int[]"
       case PrimitiveBooleanType => "boolean"
       case PrimitiveIntType => "int"
@@ -92,7 +92,7 @@ class TypeTable {
   val lookupTable: mutable.HashMap[String, TypeDefinition] = mutable.HashMap()
 
   def add(typeName: String, typeDefinition: TypeDefinition): Either[TypeTableError, Unit] = {
-    if (typeName == "FAIL") {
+    if (typeName == "*FAIL") {
       return Left(DefineFAILClassError)
     }
 

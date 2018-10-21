@@ -100,6 +100,8 @@ object TypeChecking {
                   val childMatches = methodMatches.filter(_._2 == false).map(_._1)
                   val parentMatches = methodMatches.filter(_._2 == true).map(_._1)
 
+                  // Filter out the parent methods that have return types that are conformed to by the return types of
+                  // child class methods
                   val parentNonCovariant = parentMatches.filter(p => {
                     childMatches.exists(c => TypeDefinition.conformsTo(
                       typeTable.get(c.returnType).get,

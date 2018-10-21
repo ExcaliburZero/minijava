@@ -850,4 +850,42 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     typeTable.get("Fac").isDefined shouldBe true
     typeTable.get("A").isDefined shouldBe true
   }
+
+  it should "pass a program with multi-level covariant overriding" in {
+    val input = Main.readFile("examples/CovariantOverride2.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    typeTable.get("Factorial").isDefined shouldBe true
+    typeTable.get("Fac").isDefined shouldBe true
+    typeTable.get("A").isDefined shouldBe true
+    typeTable.get("B").isDefined shouldBe true
+  }
+
+  it should "pass a program with multi-level covariant overriding where the last child does not override" in {
+    val input = Main.readFile("examples/CovariantOverride3.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    typeTable.get("Factorial").isDefined shouldBe true
+    typeTable.get("Fac").isDefined shouldBe true
+    typeTable.get("A").isDefined shouldBe true
+    typeTable.get("B").isDefined shouldBe true
+  }
 }
