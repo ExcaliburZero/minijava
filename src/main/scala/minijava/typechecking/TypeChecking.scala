@@ -2,7 +2,6 @@ package minijava.typechecking
 
 import minijava.grammar.Goal
 import minijava.messages.{CompilerError, CompilerMessage, TypeCheckingError}
-import minijava.typechecking.TypeChecking.{failBadMethodOverloading, getAllClassMethods}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -85,23 +84,32 @@ object TypeChecking {
     for (t <- typeTable.types()) {
       t match {
         case classType: ClassType =>
-          // A method is a improperly overloaded if there is at least one other method in the same class or any of its
-          // ancestors that has the same name and parameters, but not the same return type. Cases of the same return
-          // type should already be handled by an earlier check.
+
           val classMethods = getAllClassMethods(classType, typeTable)
 
-          classMethods.groupBy(_.name)
+          classMethods.groupBy(_._1.name)
             .foreach(nm => {
               val name = nm._1
               val methodsSameName = nm._2
 
-              methodsSameName.groupBy(_.parameters.map(_.typeName))
+              methodsSameName.groupBy(_._1.parameters.map(_.typeName))
                 .foreach(pm => {
                   val parameterTypes = pm._1
                   val methodMatches = pm._2
 
-                  if (methodMatches.map(_.returnType).distinct.length > 1) {
-                    failBadMethodOverloading(classType.getName(), name, parameterTypes, methodMatches, errors)
+                  val childMatches = methodMatches.filter(_._2 == false).map(_._1)
+                  val parentMatches = methodMatches.filter(_._2 == true).map(_._1)
+
+                  val parentNonCovariant = parentMatches.filter(p => {
+                    childMatches.exists(c => TypeDefinition.conformsTo(
+                      typeTable.get(c.returnType).get,
+                      typeTable.get(p.returnType).get,
+                      typeTable
+                    ).isEmpty)
+                  })
+
+                  if ((childMatches ++ parentNonCovariant).distinct.length > 1) {
+                    failBadMethodOverloading(classType.getName(), name, parameterTypes, childMatches ++ parentNonCovariant, errors)
                   }
                 })
             })
@@ -112,10 +120,10 @@ object TypeChecking {
     errors.toList
   }
 
-  def getAllClassMethods(classType: ClassLikeType, typeTable: TypeTable): List[Method] = {
+  def getAllClassMethods(classType: ClassLikeType, typeTable: TypeTable): List[(Method, Boolean)] = {
     classType.getParentClass() match {
-      case None => classType.getMethods()
-      case Some(p) => classType.getMethods() ++ getAllClassMethods(typeTable.get(p).get.asInstanceOf[ClassLikeType], typeTable)
+      case None => classType.getMethods().map((_, false))
+      case Some(p) => classType.getMethods().map((_, false)) ++ getAllClassMethods(typeTable.get(p).get.asInstanceOf[ClassLikeType], typeTable).map(t => (t._1, true))
     }
   }
 
