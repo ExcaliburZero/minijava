@@ -46,106 +46,6 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     errors shouldBe expected
   }
 
-  it should "fail when a class is declared with the same name as the FAIL type" in {
-    val input = Main.readFile("examples/FAILClass.minijava")
-
-    val ast = Main.parseString(input)
-
-    ast.isRight shouldBe true
-
-    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
-
-    typeCheckResult.isLeft shouldBe true
-
-    val errors = typeCheckResult.left.get
-
-    val expected = List(
-      CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(20)), "Attempt to create class with reserved name \"FAIL\"")
-    )
-
-    errors shouldBe expected
-  }
-
-  it should "fail when the main class is declared with the same name as the FAIL type" in {
-    val input = Main.readFile("examples/FAILMain.minijava")
-
-    val ast = Main.parseString(input)
-
-    ast.isRight shouldBe true
-
-    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
-
-    typeCheckResult.isLeft shouldBe true
-
-    val errors = typeCheckResult.left.get
-
-    val expected = List(
-      CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(1)), "Attempt to create class with reserved name \"FAIL\"")
-    )
-
-    errors shouldBe expected
-  }
-
-  it should "fail when a class variable is declared with the reserved FAIL type" in {
-    val input = Main.readFile("examples/FAILClassVariable.minijava")
-
-    val ast = Main.parseString(input)
-
-    ast.isRight shouldBe true
-
-    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
-
-    typeCheckResult.isLeft shouldBe true
-
-    val errors = typeCheckResult.left.get
-
-    val expected = List(
-      CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(9)), "Attempt to create a class instance variable \"sal\" with reserved type \"FAIL\"")
-    )
-
-    errors shouldBe expected
-  }
-
-  it should "fail when a local variable is declared with the reserved FAIL type" in {
-    val input = Main.readFile("examples/FAILVariable.minijava")
-
-    val ast = Main.parseString(input)
-
-    ast.isRight shouldBe true
-
-    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
-
-    typeCheckResult.isLeft shouldBe true
-
-    val errors = typeCheckResult.left.get
-
-    val expected = List(
-      CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(10)), "Attempt to create a local variable \"bad\" with reserved type \"FAIL\"")
-    )
-
-    errors shouldBe expected
-  }
-
-  it should "fail when a parameter is declared with the reserved FAIL type" in {
-    val input = Main.readFile("examples/FAILParameter.minijava")
-
-    val ast = Main.parseString(input)
-
-    ast.isRight shouldBe true
-
-    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
-
-    typeCheckResult.isLeft shouldBe true
-
-    val errors = typeCheckResult.left.get
-
-    val expected = List(
-      CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(9)), "Attempt to create a parameter \"jane\" with reserved type \"FAIL\"")
-    )
-
-    errors shouldBe expected
-  }
-
   it should "fail when a class extends itself" in {
     val input = Main.readFile("examples/RecursiveInheritingClass.minijava")
 
@@ -887,5 +787,45 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     typeTable.get("Fac").isDefined shouldBe true
     typeTable.get("A").isDefined shouldBe true
     typeTable.get("B").isDefined shouldBe true
+  }
+
+  it should "fail when a local variable is declared with an unknown type" in {
+    val input = Main.readFile("examples/LocalVariableUnknownType.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, None, "Unknown type \"a\" for local variable \"num_2\" in method \"ComputeFac\" of class \"Fac\".")
+    )
+
+    errors shouldBe expected
+  }
+
+  it should "fail when a parameter is declared with an unknown type" in {
+    val input = Main.readFile("examples/ParameterUnknownType.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, None, "Unknown type \"A\" for parameter \"num\" in method \"hi\" of class \"Fac\".")
+    )
+
+    errors shouldBe expected
   }
 }

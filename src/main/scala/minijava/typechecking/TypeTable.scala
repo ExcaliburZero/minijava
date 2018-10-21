@@ -86,16 +86,11 @@ case class Method(name: String, isIO: Boolean, returnType: String, parameters: L
 
 sealed trait TypeTableError
 case class TypeAlreadyExistsError(typeName: String) extends TypeTableError
-case object DefineFAILClassError extends TypeTableError
 
 class TypeTable {
   val lookupTable: mutable.HashMap[String, TypeDefinition] = mutable.HashMap()
 
   def add(typeName: String, typeDefinition: TypeDefinition): Either[TypeTableError, Unit] = {
-    if (typeName == "*FAIL") {
-      return Left(DefineFAILClassError)
-    }
-
     if (lookupTable.contains(typeName)) {
       Left(TypeAlreadyExistsError(typeName))
     } else {

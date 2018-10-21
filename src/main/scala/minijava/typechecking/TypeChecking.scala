@@ -13,10 +13,12 @@ object TypeChecking {
       return Left(duplicateTypeErrors)
     }
 
+    val unknownTypeErrors = checkForUnknownTypesInLocalsAndParameters(typeTable)
     val duplicateMethodErrors = checkForDuplicateMethods(typeTable)
 
-    if (duplicateMethodErrors.nonEmpty) {
-      return Left(duplicateMethodErrors)
+    val stage2Errors = unknownTypeErrors ++ duplicateMethodErrors
+    if (stage2Errors.nonEmpty) {
+      return Left(stage2Errors)
     }
 
     val overloadingErrors = validateMethodOverloading(typeTable)
@@ -34,14 +36,14 @@ object TypeChecking {
     Right(typeTable)
   }
 
-  def extractTypeTable(ast: Goal): (TypeTable, List[CompilerMessage]) = {
+  private def extractTypeTable(ast: Goal): (TypeTable, List[CompilerMessage]) = {
     val typeExtractionVisitor = new TypeExtractionVisitor()
 
     typeExtractionVisitor.visitGoal(ast, ())
     typeExtractionVisitor.getTypeTable()
   }
 
-  def checkForDuplicateMethods(typeTable: TypeTable): List[CompilerMessage] = {
+  private def checkForDuplicateMethods(typeTable: TypeTable): List[CompilerMessage] = {
     val errors = new ArrayBuffer[CompilerMessage]()
 
     for (t <- typeTable.types()) {
@@ -61,7 +63,7 @@ object TypeChecking {
     errors.toList
   }
 
-  def failDuplicateMethod(className: String, methodInfo: (String, List[Variable], String), numDuplicates: Int, errors: ArrayBuffer[CompilerMessage]): Unit = {
+  private def failDuplicateMethod(className: String, methodInfo: (String, List[Variable], String), numDuplicates: Int, errors: ArrayBuffer[CompilerMessage]): Unit = {
     val methodName = methodInfo._1
     val params = methodInfo._2
     val returnType = methodInfo._3
@@ -78,7 +80,7 @@ object TypeChecking {
     errors.append(err)
   }
 
-  def validateMethodOverloading(typeTable: TypeTable): List[CompilerMessage] = {
+  private def validateMethodOverloading(typeTable: TypeTable): List[CompilerMessage] = {
     val errors = new ArrayBuffer[CompilerMessage]()
 
     for (t <- typeTable.types()) {
@@ -122,14 +124,14 @@ object TypeChecking {
     errors.toList
   }
 
-  def getAllClassMethods(classType: ClassLikeType, typeTable: TypeTable): List[(Method, Boolean)] = {
+  private def getAllClassMethods(classType: ClassLikeType, typeTable: TypeTable): List[(Method, Boolean)] = {
     classType.getParentClass() match {
       case None => classType.getMethods().map((_, false))
       case Some(p) => classType.getMethods().map((_, false)) ++ getAllClassMethods(typeTable.get(p).get.asInstanceOf[ClassLikeType], typeTable).map(t => (t._1, true))
     }
   }
 
-  def failBadMethodOverloading(className: String, methodName: String, parameterTypes: List[String], matches: List[Method], errors: ArrayBuffer[CompilerMessage]): Unit = {
+  private def failBadMethodOverloading(className: String, methodName: String, parameterTypes: List[String], matches: List[Method], errors: ArrayBuffer[CompilerMessage]): Unit = {
     val parameters = parameterTypes.mkString(", ")
 
     val messageStart = "Multiple methods \"%s(%s)\" exist for class \"%s\":\n\n".format(methodName, parameters, className)
@@ -146,7 +148,7 @@ object TypeChecking {
     errors.append(err)
   }
 
-  def visitingTypeCheck(typeTable: TypeTable): List[CompilerMessage] = {
+  private def visitingTypeCheck(typeTable: TypeTable): List[CompilerMessage] = {
     val visitor = new TypeCheckingVisitor()
 
     for (t <- typeTable.types()) {
@@ -164,7 +166,7 @@ object TypeChecking {
     visitor.getTypeCheckingErrors()
   }
 
-  def typeCheckMethod(visitor: TypeCheckingVisitor, typeTable: TypeTable, classType: ClassLikeType, method: Method): Unit = {
+  private def typeCheckMethod(visitor: TypeCheckingVisitor, typeTable: TypeTable, classType: ClassLikeType, method: Method): Unit = {
     val context = TypeVisitorContext(typeTable, classType, method)
 
     for (s <- method.statements) {
@@ -172,5 +174,40 @@ object TypeChecking {
     }
 
     method.returnExpression.foreach(e => visitor.visit(e, context))
+  }
+
+  private def checkForUnknownTypesInLocalsAndParameters(typeTable: TypeTable): List[CompilerMessage] = {
+    val errors = new ArrayBuffer[CompilerMessage]()
+
+    for (t <- typeTable.types()) {
+      t match {
+        case classType: ClassType =>
+          classType.methods.foreach(m => {
+            for (v <- m.parameters) {
+              if (typeTable.get(v.typeName).isEmpty) {
+                failUnknownVariableType(v, "parameter", m, classType, errors)
+              }
+            }
+
+            for (v <- m.localVariables) {
+              if (typeTable.get(v.typeName).isEmpty) {
+                failUnknownVariableType(v, "local variable", m, classType, errors)
+              }
+            }
+          })
+        case _ =>
+      }
+    }
+
+    errors.toList
+  }
+
+  private def failUnknownVariableType(variable: Variable, context: String, method: Method, classLikeType: ClassLikeType, errors: ArrayBuffer[CompilerMessage]): Unit = {
+    val message = "Unknown type \"%s\" for %s \"%s\" in method \"%s\" of class \"%s\"."
+      .format(variable.typeName, context, variable.name, method.name, classLikeType.getName())
+
+    val err = CompilerMessage(CompilerError, TypeCheckingError, None, message)
+
+    errors.append(err)
   }
 }
