@@ -34,7 +34,7 @@ sealed trait Expression extends ASTNode
 case class BinaryOperationExpression(firstExpression: Expression, operator: BinaryOperator, secondExpression: Expression, line: Int, column: Int) extends Expression
 case class ArrayAccessExpression(arrayExpression: Expression, indexExpression: Expression, line: Int, column: Int) extends Expression
 case class ArrayLengthExpression(arrayExpression: Expression) extends Expression
-case class MethodCallExpression(objectExpression: Expression, methodName: Identifier, parameters: List[Expression]) extends Expression
+case class MethodCallExpression(objectExpression: Expression, methodName: Identifier, parameters: List[Expression], line: Int, column: Int) extends Expression
 case class IntegerLiteral(value: Int) extends Expression
 case object TrueLiteral extends Expression
 case object FalseLiteral extends Expression

@@ -233,8 +233,10 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
       paramsRaw <- Option(ctx.expression());
       params <- paramsRaw.toArray.drop(1)
         .map(_.asInstanceOf[MiniJavaParser.ExpressionContext].accept(this).asInstanceOf[Option[Expression]])
-        .toList.sequence
-    ) yield MethodCallExpression(objExp, methodName, params)
+        .toList.sequence;
+      lineNumber <- Option(ctx.start.getLine);
+      columnNumber <- Option(ctx.start.getCharPositionInLine)
+    ) yield MethodCallExpression(objExp, methodName, params, lineNumber, columnNumber)
   }
 
   override def visitIntegerLiteral(ctx: MiniJavaParser.IntegerLiteralContext): Option[ASTNode] = {

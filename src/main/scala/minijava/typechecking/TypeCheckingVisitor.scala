@@ -188,9 +188,11 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
 
     val methodName = methodCallExpression.methodName.name
 
+    val location = LineColumn(methodCallExpression.line, methodCallExpression.column)
+
     getMatchingMethod(objectType.asInstanceOf[ClassType], methodName, parameterTypes, a) match {
-      case None => ???
       case Some(m) => a.typeTable.get(m.returnType).get
+      case None => failUnknownMethod(objectType.getName(), methodName, parameterTypes, location)
     }
   }
 
@@ -228,8 +230,6 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
   }
 
   override def visitNewObjectExpression(newObjectExpression: NewObjectExpression, a: TypeVisitorContext): TypeDefinition = {
-    // TODO: What about constructor parameters?
-
     val className = newObjectExpression.className.name
 
     a.typeTable.get(className) match {
@@ -338,6 +338,23 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
       case None =>
     }
 
-    ???
+    objectType.getParentClass() match {
+      case Some(p) =>
+        getMatchingMethod(a.typeTable.get(p).get.asInstanceOf[ClassLikeType],
+          methodName, parameterTypes, a)
+      case None => None
+    }
+  }
+
+  def failUnknownMethod(className: String, methodName: String, parameterTypes: List[TypeDefinition], location: Location): TypeDefinition = {
+    val message = "Method \"%s(%s)\" called on object of class \"%s\", but that method is not defined for that class."
+        .format(methodName, parameterTypes.map(_.getName()).mkString(", "), className)
+
+    val typeCheckError = CompilerMessage(CompilerError, TypeCheckingError, Some(location),
+      message)
+
+    typeCheckingErrors.append(typeCheckError)
+
+    FailType
   }
 }
