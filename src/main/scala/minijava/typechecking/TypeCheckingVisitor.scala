@@ -23,6 +23,14 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     typeCheckingErrors.toList
   }
 
+  def checkReturnType(expectedType: TypeDefinition, returnExpression: Expression, a: TypeVisitorContext): Unit = {
+    val actualType = visit(returnExpression, a)
+
+    if (TypeDefinition.conformsTo(actualType, expectedType, a.typeTable).isEmpty) {
+      failReturnType(actualType, expectedType, a)
+    }
+  }
+
   override def visitStatementBlock(statementBlock: StatementBlock, a: TypeVisitorContext): TypeDefinition = {
     for (s <- statementBlock.statements) {
       visit(s, a)
@@ -444,5 +452,15 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     typeCheckingErrors.append(typeCheckError)
 
     FailType
+  }
+
+  private def failReturnType(actualType: TypeDefinition, expectedType: TypeDefinition, a: TypeVisitorContext): Unit = {
+    val message = "Incorrect return type for method \"%s\" of class \"%s\".\n\nExpected: %s\nFound: %s"
+      .format(a.curMethod.name, a.curClass.getName(), expectedType.getName(), actualType.getName())
+
+    val typeCheckError = CompilerMessage(CompilerError, TypeCheckingError, None,
+      message)
+
+    typeCheckingErrors.append(typeCheckError)
   }
 }

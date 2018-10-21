@@ -173,7 +173,11 @@ object TypeChecking {
       visitor.visit(s, context)
     }
 
-    method.returnExpression.foreach(e => visitor.visit(e, context))
+    classType match {
+      case _: MainClassType =>
+      case _ =>
+        visitor.checkReturnType(typeTable.get(method.returnType).get, method.returnExpression.get, context)
+    }
   }
 
   private def checkForUnknownTypes(typeTable: TypeTable): List[CompilerMessage] = {

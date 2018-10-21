@@ -848,4 +848,24 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
 
     errors shouldBe expected
   }
+
+  it should "fail when an incorrect type is returned in a method" in {
+    val input = Main.readFile("examples/ReturnIncorrectType.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, None, "Incorrect return type for method \"ComputeFac\" of class \"Fac\".\n\nExpected: int\nFound: boolean")
+    )
+
+    errors shouldBe expected
+  }
 }
