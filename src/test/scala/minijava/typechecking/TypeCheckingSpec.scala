@@ -518,6 +518,26 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     typeTable.get("A").isDefined shouldBe true
   }
 
+  it should "fail when a method is called on a non-object value" in {
+    val input = Main.readFile("examples/MethodCallNonObject.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineColumn(3, 27)), "Method \"ComputeFac\" called on non-object value of type \"int\".")
+    )
+
+    errors shouldBe expected
+  }
+
   it should "pass the Factorial example" in {
     val input = Main.readFile("examples/Factorial.minijava")
 

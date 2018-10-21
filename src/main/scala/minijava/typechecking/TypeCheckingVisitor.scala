@@ -143,6 +143,7 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
       return FailType
     }
 
+    // An unknown operator was given. This should not be possible.
     ???
   }
 
@@ -177,18 +178,18 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
   override def visitMethodCallExpression(methodCallExpression: MethodCallExpression, a: TypeVisitorContext): TypeDefinition = {
     val objectType = visit(methodCallExpression.objectExpression, a)
 
+    val methodName = methodCallExpression.methodName.name
+
+    val location = LineColumn(methodCallExpression.line, methodCallExpression.column)
+
     objectType match {
       case _: ClassType =>
       case FailType => return FailType
-      case _ => return failMethodCallOnNonObject(objectType)
+      case _ => return failMethodCallOnNonObject(objectType, methodName, location)
     }
 
     val parameterTypes = for (p <- methodCallExpression.parameters)
       yield visit(p, a)
-
-    val methodName = methodCallExpression.methodName.name
-
-    val location = LineColumn(methodCallExpression.line, methodCallExpression.column)
 
     getMatchingMethod(objectType.asInstanceOf[ClassType], methodName, parameterTypes, a) match {
       case Some(m) => a.typeTable.get(m.returnType).get
@@ -304,10 +305,16 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     FailType
   }
 
-  def failMethodCallOnNonObject(objectType: TypeDefinition): TypeDefinition = {
-    val message = ???
+  def failMethodCallOnNonObject(objectType: TypeDefinition, methodName: String, location: Location): TypeDefinition = {
+    val message = "Method \"%s\" called on non-object value of type \"%s\"."
+        .format(methodName, objectType.getName())
 
-    ???
+    val typeCheckError = CompilerMessage(CompilerError, TypeCheckingError, Some(location),
+      message)
+
+    typeCheckingErrors.append(typeCheckError)
+
+    FailType
   }
 
   def failVariableNotFound(name: String, location: Location): TypeDefinition = {
