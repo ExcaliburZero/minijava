@@ -253,6 +253,20 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
     )
   }
 
+  it should "work on the MultipleIfs example" in {
+    testProgram("examples/", "MultipleIfs.minijava",
+      "MultipleIfs",
+      "1\n3\n5\n"
+    )
+  }
+
+  it should "work on the NestedIfs example" in {
+    testProgram("examples/", "NestedIfs.minijava",
+      "NestedIfs",
+      "2\n4\n"
+    )
+  }
+
   private def writeClassFile(visitor: CodeGenerationVisitor, classFileName: String): Unit = {
     val fos = new FileOutputStream(classFileName)
     try {

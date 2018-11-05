@@ -140,6 +140,10 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     a.visitInsn(Opcodes.ICONST_1)
   }
 
+  override def visitParenedExpression(parenedExpression: ParenedExpression, a: MethodVisitor): Unit = {
+    visit(parenedExpression.expression, a)
+  }
+
   def visitMainClassType(fileName: String, mainClassType: MainClassType): Unit = {
     // Create main class
     classWriter.visit(
