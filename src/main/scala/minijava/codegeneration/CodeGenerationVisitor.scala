@@ -141,23 +141,11 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   }
 
   override def visitNegatedExpression(negatedExpression: NegatedExpression, a: MethodVisitor): Unit = {
-    val falseLabel = new Label()
-    val endLabel = new Label()
-
     visit(negatedExpression.expression, a)
 
-    // TODO: There is a better way to do this, I think using XOR
-
-    // If true, then jump to push false
-    a.visitJumpInsn(Opcodes.IFEQ, falseLabel)
-
-    visitTrueLiteral(a)                     // Since it was false, push true
-    a.visitJumpInsn(Opcodes.GOTO, endLabel) // Jump to skip past the push of false
-
-    a.visitLabel(falseLabel)  // Add label for pushing false
-    visitFalseLiteral(a)      // Since it was true, push false
-
-    a.visitLabel(endLabel)  // Add label for end of negation
+    // XOR the value with 1 to negate it, 0 => 1 and 1 => 0
+    a.visitInsn(Opcodes.ICONST_1)
+    a.visitInsn(Opcodes.IXOR)
   }
 
   override def visitParenedExpression(parenedExpression: ParenedExpression, a: MethodVisitor): Unit = {
