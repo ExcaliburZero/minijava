@@ -225,12 +225,64 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
     testOutput("IfLessThanFalseEqual", "2\n")
   }
 
+  it should "work on the IfAndTrueTrue example" in {
+    testProgram("examples/", "IfAndTrueTrue.minijava",
+      "IfAndTrueTrue",
+      "1\n"
+    )
+  }
+
+  it should "work on the IfAndTrueFalse example" in {
+    testProgram("examples/", "IfAndTrueFalse.minijava",
+      "IfAndTrueFalse",
+      "2\n"
+    )
+  }
+
+  it should "work on the IfAndFalseTrue example" in {
+    testProgram("examples/", "IfAndFalseTrue.minijava",
+      "IfAndFalseTrue",
+      "2\n"
+    )
+  }
+
+  it should "work on the IfAndFalseFalse example" in {
+    testProgram("examples/", "IfAndFalseFalse.minijava",
+      "IfAndFalseFalse",
+      "2\n"
+    )
+  }
+
   private def writeClassFile(visitor: CodeGenerationVisitor, classFileName: String): Unit = {
     val fos = new FileOutputStream(classFileName)
     try {
       fos.write(visitor.getClassWriter().toByteArray)
     }
     finally if (fos != null) fos.close()
+  }
+
+  private def testProgram(filePath: String, fileName: String, mainClassName: String, expectedOutput: String): Assertion = {
+    val input = Main.readFile(filePath + fileName)
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    val visitor = new CodeGenerationVisitor()
+
+    val mainClassType = typeTable.get(mainClassName).get.asInstanceOf[MainClassType]
+
+    visitor.visitMainClassType(fileName, mainClassType)
+
+    writeClassFile(visitor, f"$mainClassName.class")
+
+    testOutput(mainClassName, expectedOutput)
   }
 
   private def testOutput(mainClassName: String, expectedOutput: String): Assertion = {
