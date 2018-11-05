@@ -1,0 +1,11 @@
+class IfFalse {
+    public static io void main(String[] a){
+        {
+            if (false) {
+                System.out.println(1);
+            } else {
+                System.out.println(2);
+            }
+        }
+    }
+}

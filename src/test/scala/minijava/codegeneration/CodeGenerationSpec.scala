@@ -129,6 +129,102 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
     testOutput("IfTrue", "1\n")
   }
 
+  it should "work on the IfFalse example" in {
+    val input = Main.readFile("examples/IfFalse.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    val visitor = new CodeGenerationVisitor()
+
+    val mainClassType = typeTable.get("IfFalse").get.asInstanceOf[MainClassType]
+
+    visitor.visitMainClassType("IfFalse.minijava", mainClassType)
+
+    writeClassFile(visitor, "IfFalse.class")
+
+    testOutput("IfFalse", "2\n")
+  }
+
+  it should "work on the IfLessThanTrue example" in {
+    val input = Main.readFile("examples/IfLessThanTrue.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    val visitor = new CodeGenerationVisitor()
+
+    val mainClassType = typeTable.get("IfLessThanTrue").get.asInstanceOf[MainClassType]
+
+    visitor.visitMainClassType("IfLessThanTrue.minijava", mainClassType)
+
+    writeClassFile(visitor, "IfLessThanTrue.class")
+
+    testOutput("IfLessThanTrue", "1\n")
+  }
+
+  it should "work on the IfLessThanFalse example" in {
+    val input = Main.readFile("examples/IfLessThanFalse.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    val visitor = new CodeGenerationVisitor()
+
+    val mainClassType = typeTable.get("IfLessThanFalse").get.asInstanceOf[MainClassType]
+
+    visitor.visitMainClassType("IfLessThanFalse.minijava", mainClassType)
+
+    writeClassFile(visitor, "IfLessThanFalse.class")
+
+    testOutput("IfLessThanFalse", "2\n")
+  }
+
+  it should "work on the IfLessThanFalseEqual example" in {
+    val input = Main.readFile("examples/IfLessThanFalseEqual.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    val visitor = new CodeGenerationVisitor()
+
+    val mainClassType = typeTable.get("IfLessThanFalseEqual").get.asInstanceOf[MainClassType]
+
+    visitor.visitMainClassType("IfLessThanFalseEqual.minijava", mainClassType)
+
+    writeClassFile(visitor, "IfLessThanFalseEqual.class")
+
+    testOutput("IfLessThanFalseEqual", "2\n")
+  }
+
   private def writeClassFile(visitor: CodeGenerationVisitor, classFileName: String): Unit = {
     val fos = new FileOutputStream(classFileName)
     try {

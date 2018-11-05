@@ -1,0 +1,11 @@
+class IfLessThanFalseEqual {
+    public static io void main(String[] a){
+        {
+            if (2 < 2) {
+                System.out.println(1);
+            } else {
+                System.out.println(2);
+            }
+        }
+    }
+}

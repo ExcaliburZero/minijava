@@ -89,6 +89,23 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
         visit(binaryOperationExpression.firstExpression, a)
         visit(binaryOperationExpression.secondExpression, a)
         a.visitInsn(Opcodes.IMUL)
+      case LessThan =>
+        visit(binaryOperationExpression.firstExpression, a)
+        visit(binaryOperationExpression.secondExpression, a)
+
+        val falseLabel = new Label()
+        val endLabel = new Label()
+
+        // If not less than, then jump to push false
+        a.visitJumpInsn(Opcodes.IF_ICMPGE, falseLabel)
+
+        visitTrueLiteral(a)                     // Since it was less than, push true
+        a.visitJumpInsn(Opcodes.GOTO, endLabel) // Jump to skip past the push of false
+
+        a.visitLabel(falseLabel)  // Add label for pushing false
+        visitFalseLiteral(a)      // Since it was not less than, push false
+
+        a.visitLabel(endLabel)  // Add label for end of comparison
       case _ => ???
     }
   }
@@ -99,6 +116,10 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
 
   override def visitTrueLiteral(a: MethodVisitor): Unit = {
     a.visitInsn(Opcodes.ICONST_0)
+  }
+
+  override def visitFalseLiteral(a: MethodVisitor): Unit = {
+    a.visitInsn(Opcodes.ICONST_1)
   }
 
   def visitMainClassType(fileName: String, mainClassType: MainClassType): Unit = {
