@@ -4,30 +4,13 @@ import minijava.grammar._
 import minijava.typechecking.{MainClassType, Method}
 import org.objectweb.asm.{ClassWriter, Label, MethodVisitor, Opcodes}
 
+import scala.collection.mutable.ArrayBuffer
+
 class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
-  private val classWriter = new ClassWriter(true)
+  private val classWriters = new ArrayBuffer[(String, ClassWriter)]()
 
-  def getClassWriter(): ClassWriter = {
-    classWriter
-  }
-
-  private def visitMainMethod(mainMethod: Method): Unit = {
-    val methodVisitor = classWriter.visitMethod(
-      Opcodes.ACC_PUBLIC + Opcodes.ACC_STATIC,
-      mainMethod.name,
-      "([Ljava/lang/String;)V",
-      null,
-      null
-    )
-
-    assert(mainMethod.statements.length == 1)
-    visit(mainMethod.statements.head, methodVisitor)
-
-    methodVisitor.visitInsn(Opcodes.RETURN)
-
-    methodVisitor.visitMaxs(2, 1) // TODO: do this better? Maybe have each visit return a max stack?
-
-    methodVisitor.visitEnd()
+  def getClassWriters(): List[(String, ClassWriter)] = {
+    classWriters.toList
   }
 
   override def visitStatementBlock(statementBlock: StatementBlock, a: MethodVisitor): Unit = {
@@ -153,6 +136,10 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   }
 
   def visitMainClassType(fileName: String, mainClassType: MainClassType): Unit = {
+    val classWriter = new ClassWriter(true)
+
+    classWriters.append((mainClassType.name, classWriter))
+
     // Create main class
     classWriter.visit(
       49,
@@ -186,6 +173,25 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     constructorVisitor.visitEnd()
 
     // Main method
-    visitMainMethod(mainClassType.mainMethod)
+    visitMainMethod(classWriter, mainClassType.mainMethod)
+  }
+
+  private def visitMainMethod(classWriter: ClassWriter, mainMethod: Method): Unit = {
+    val methodVisitor = classWriter.visitMethod(
+      Opcodes.ACC_PUBLIC + Opcodes.ACC_STATIC,
+      mainMethod.name,
+      "([Ljava/lang/String;)V",
+      null,
+      null
+    )
+
+    assert(mainMethod.statements.length == 1)
+    visit(mainMethod.statements.head, methodVisitor)
+
+    methodVisitor.visitInsn(Opcodes.RETURN)
+
+    methodVisitor.visitMaxs(2, 1) // TODO: do this better? Maybe have each visit return a max stack?
+
+    methodVisitor.visitEnd()
   }
 }

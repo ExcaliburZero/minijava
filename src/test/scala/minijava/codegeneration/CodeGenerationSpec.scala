@@ -28,7 +28,7 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
 
     visitor.visitMainClassType("HelloOne.minijava", mainClassType)
 
-    writeClassFile(visitor, "HelloOne.class")
+    writeClassFiles(visitor)
 
     testOutput("HelloOne", "1\n")
   }
@@ -52,7 +52,7 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
 
     visitor.visitMainClassType("HelloTwo.minijava", mainClassType)
 
-    writeClassFile(visitor, "HelloTwo.class")
+    writeClassFiles(visitor)
 
     testOutput("HelloTwo", "2\n")
   }
@@ -76,7 +76,7 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
 
     visitor.visitMainClassType("HelloMinus.minijava", mainClassType)
 
-    writeClassFile(visitor, "HelloMinus.class")
+    writeClassFiles(visitor)
 
     testOutput("HelloMinus", "2\n")
   }
@@ -100,7 +100,7 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
 
     visitor.visitMainClassType("HelloTimes.minijava", mainClassType)
 
-    writeClassFile(visitor, "HelloTimes.class")
+    writeClassFiles(visitor)
 
     testOutput("HelloTimes", "6\n")
   }
@@ -124,7 +124,7 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
 
     visitor.visitMainClassType("IfTrue.minijava", mainClassType)
 
-    writeClassFile(visitor, "IfTrue.class")
+    writeClassFiles(visitor)
 
     testOutput("IfTrue", "1\n")
   }
@@ -148,7 +148,7 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
 
     visitor.visitMainClassType("IfFalse.minijava", mainClassType)
 
-    writeClassFile(visitor, "IfFalse.class")
+    writeClassFiles(visitor)
 
     testOutput("IfFalse", "2\n")
   }
@@ -172,7 +172,7 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
 
     visitor.visitMainClassType("IfLessThanTrue.minijava", mainClassType)
 
-    writeClassFile(visitor, "IfLessThanTrue.class")
+    writeClassFiles(visitor)
 
     testOutput("IfLessThanTrue", "1\n")
   }
@@ -196,7 +196,7 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
 
     visitor.visitMainClassType("IfLessThanFalse.minijava", mainClassType)
 
-    writeClassFile(visitor, "IfLessThanFalse.class")
+    writeClassFiles(visitor)
 
     testOutput("IfLessThanFalse", "2\n")
   }
@@ -220,7 +220,7 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
 
     visitor.visitMainClassType("IfLessThanFalseEqual.minijava", mainClassType)
 
-    writeClassFile(visitor, "IfLessThanFalseEqual.class")
+    writeClassFiles(visitor)
 
     testOutput("IfLessThanFalseEqual", "2\n")
   }
@@ -281,12 +281,14 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
     )
   }
 
-  private def writeClassFile(visitor: CodeGenerationVisitor, classFileName: String): Unit = {
-    val fos = new FileOutputStream(classFileName)
-    try {
-      fos.write(visitor.getClassWriter().toByteArray)
+  private def writeClassFiles(visitor: CodeGenerationVisitor): Unit = {
+    for ((classFileName, classWriter) <- visitor.getClassWriters()) {
+      val fos = new FileOutputStream(f"$classFileName.class")
+      try {
+        fos.write(classWriter.toByteArray)
+      }
+      finally if (fos != null) fos.close()
     }
-    finally if (fos != null) fos.close()
   }
 
   private def testProgram(filePath: String, fileName: String, mainClassName: String, expectedOutput: String): Assertion = {
@@ -308,7 +310,7 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
 
     visitor.visitMainClassType(fileName, mainClassType)
 
-    writeClassFile(visitor, f"$mainClassName.class")
+    writeClassFiles(visitor)
 
     testOutput(mainClassName, expectedOutput)
   }
