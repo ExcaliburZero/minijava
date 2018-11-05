@@ -92,21 +92,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       case And =>
         visit(binaryOperationExpression.firstExpression, a)
         visit(binaryOperationExpression.secondExpression, a)
-
-        val falseLabel = new Label()
-        val endLabel = new Label()
-
-        // If both true, then jump to push false
-        a.visitInsn(Opcodes.IADD)
-        a.visitJumpInsn(Opcodes.IFNE, falseLabel)
-
-        visitTrueLiteral(a)                     // Since both were true, push true
-        a.visitJumpInsn(Opcodes.GOTO, endLabel) // Jump to skip past the push of false
-
-        a.visitLabel(falseLabel)  // Add label for pushing false
-        visitFalseLiteral(a)      // Since at least one was not true, push false
-
-        a.visitLabel(endLabel)  // Add label for end of comparison
+        a.visitInsn(Opcodes.IOR)  // Bitwise or is equivalent to and for true=0 and false=1
       case _ => ???
     }
   }
