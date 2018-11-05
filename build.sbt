@@ -14,6 +14,7 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies += "org.scalaz" % "scalaz-core_2.10" % "7.2.26"
+libraryDependencies += "org.ow2.jonas.osgi" % "asm" % "5.3.0-M3"
 
 mainClass in Compile := Some("minijava.Main")
 
