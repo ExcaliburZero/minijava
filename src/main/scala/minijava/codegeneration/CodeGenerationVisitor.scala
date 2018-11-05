@@ -1,6 +1,6 @@
 package minijava.codegeneration
 
-import minijava.grammar.{ASTVisitor, IntegerLiteral, PrintStatement}
+import minijava.grammar._
 import minijava.typechecking.{MainClassType, Method}
 import org.objectweb.asm.{ClassWriter, MethodVisitor, Opcodes}
 
@@ -49,6 +49,16 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       "println",
       "(I)V"
     )
+  }
+
+  override def visitBinaryOperationExpression(binaryOperationExpression: BinaryOperationExpression, a: MethodVisitor): Unit = {
+    binaryOperationExpression.operator match {
+      case Plus =>
+        visit(binaryOperationExpression.firstExpression, a)
+        visit(binaryOperationExpression.secondExpression, a)
+        a.visitInsn(Opcodes.IADD)
+      case _ => ???
+    }
   }
 
   override def visitIntegerLiteral(integerLiteral: IntegerLiteral, a: MethodVisitor): Unit = {
