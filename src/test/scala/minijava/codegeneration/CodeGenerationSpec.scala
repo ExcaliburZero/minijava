@@ -267,6 +267,20 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
     )
   }
 
+  it should "work on the IfNotTrue example" in {
+    testProgram("examples/", "IfNotTrue.minijava",
+      "IfNotTrue",
+      "2\n"
+    )
+  }
+
+  it should "work on the IfNotFalse example" in {
+    testProgram("examples/", "IfNotFalse.minijava",
+      "IfNotFalse",
+      "1\n"
+    )
+  }
+
   private def writeClassFile(visitor: CodeGenerationVisitor, classFileName: String): Unit = {
     val fos = new FileOutputStream(classFileName)
     try {
