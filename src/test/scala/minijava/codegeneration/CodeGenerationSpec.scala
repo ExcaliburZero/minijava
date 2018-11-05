@@ -22,19 +22,13 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
 
     val typeTable = typeCheckResult.right.get
 
-    val vistor = new CodeGenerationVisitor()
+    val visitor = new CodeGenerationVisitor()
 
     val mainClassType = typeTable.get("HelloOne").get.asInstanceOf[MainClassType]
 
-    vistor.visitMainClassType("HelloOne.minijava", mainClassType)
+    visitor.visitMainClassType("HelloOne.minijava", mainClassType)
 
-    try {
-      val fos = new FileOutputStream("HelloOne.class")
-      try
-        fos.write(vistor.getClassWriter().toByteArray)
-      //fos.close(); There is no more need for this line since you had created the instance of "fos" inside the try. And this will automatically close the OutputStream
-      finally if (fos != null) fos.close()
-    }
+    writeClassFile(visitor, "HelloOne.class")
 
     testOutput("HelloOne", "1\n")
   }
@@ -52,24 +46,74 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
 
     val typeTable = typeCheckResult.right.get
 
-    val vistor = new CodeGenerationVisitor()
+    val visitor = new CodeGenerationVisitor()
 
     val mainClassType = typeTable.get("HelloTwo").get.asInstanceOf[MainClassType]
 
-    vistor.visitMainClassType("HelloTwo.minijava", mainClassType)
+    visitor.visitMainClassType("HelloTwo.minijava", mainClassType)
 
-    try {
-      val fos = new FileOutputStream("HelloTwo.class")
-      try
-        fos.write(vistor.getClassWriter().toByteArray)
-      //fos.close(); There is no more need for this line since you had created the instance of "fos" inside the try. And this will automatically close the OutputStream
-      finally if (fos != null) fos.close()
-    }
+    writeClassFile(visitor, "HelloTwo.class")
 
     testOutput("HelloTwo", "2\n")
   }
 
-  def testOutput(mainClassName: String, expectedOutput: String): Assertion = {
+  it should "work on the HelloMinus example" in {
+    val input = Main.readFile("examples/HelloMinus.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    val visitor = new CodeGenerationVisitor()
+
+    val mainClassType = typeTable.get("HelloMinus").get.asInstanceOf[MainClassType]
+
+    visitor.visitMainClassType("HelloMinus.minijava", mainClassType)
+
+    writeClassFile(visitor, "HelloMinus.class")
+
+    testOutput("HelloMinus", "2\n")
+  }
+
+  it should "work on the HelloTimes example" in {
+    val input = Main.readFile("examples/HelloTimes.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    val visitor = new CodeGenerationVisitor()
+
+    val mainClassType = typeTable.get("HelloTimes").get.asInstanceOf[MainClassType]
+
+    visitor.visitMainClassType("HelloTimes.minijava", mainClassType)
+
+    writeClassFile(visitor, "HelloTimes.class")
+
+    testOutput("HelloTimes", "6\n")
+  }
+
+  private def writeClassFile(visitor: CodeGenerationVisitor, classFileName: String): Unit = {
+    val fos = new FileOutputStream(classFileName)
+    try {
+      fos.write(visitor.getClassWriter().toByteArray)
+    }
+    finally if (fos != null) fos.close()
+  }
+
+  private def testOutput(mainClassName: String, expectedOutput: String): Assertion = {
     val command = f"java $mainClassName"
 
     val actualOutput = command !!

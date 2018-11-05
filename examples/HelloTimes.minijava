@@ -1,0 +1,5 @@
+class HelloTimes {
+    public static io void main(String[] a){
+        System.out.println(3 * 2);
+    }
+}

@@ -57,6 +57,14 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
         visit(binaryOperationExpression.firstExpression, a)
         visit(binaryOperationExpression.secondExpression, a)
         a.visitInsn(Opcodes.IADD)
+      case Minus =>
+        visit(binaryOperationExpression.firstExpression, a)
+        visit(binaryOperationExpression.secondExpression, a)
+        a.visitInsn(Opcodes.ISUB)
+      case Times =>
+        visit(binaryOperationExpression.firstExpression, a)
+        visit(binaryOperationExpression.secondExpression, a)
+        a.visitInsn(Opcodes.IMUL)
       case _ => ???
     }
   }
