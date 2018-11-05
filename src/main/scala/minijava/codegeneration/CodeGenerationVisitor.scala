@@ -2,7 +2,7 @@ package minijava.codegeneration
 
 import minijava.grammar._
 import minijava.typechecking.{MainClassType, Method}
-import org.objectweb.asm.{ClassWriter, MethodVisitor, Opcodes}
+import org.objectweb.asm.{ClassWriter, Label, MethodVisitor, Opcodes}
 
 class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   private val classWriter = new ClassWriter(true)
@@ -28,6 +28,30 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     methodVisitor.visitMaxs(2, 1) // TODO: do this better? Maybe have each visit return a max stack?
 
     methodVisitor.visitEnd()
+  }
+
+  override def visitStatementBlock(statementBlock: StatementBlock, a: MethodVisitor): Unit = {
+    statementBlock.statements.foreach(visit(_, a))
+  }
+
+  override def visitIfStatement(ifStatement: IfStatement, a: MethodVisitor): Unit = {
+    val elseLabel = new Label()
+    val endLabel = new Label()
+
+    // Add the bytecode to evaluate the condition and push the result to the stack
+    visit(ifStatement.condition, a)
+
+    // Jump to the else clause if the condition is false
+    a.visitJumpInsn(Opcodes.IFNE, elseLabel)
+
+    visit(ifStatement.thenClause, a)        // Add bytecode for if clause
+    a.visitJumpInsn(Opcodes.GOTO, endLabel) // At the end of the if clause jump to skip the else
+
+    a.visitLabel(elseLabel)                 // Add label for else clause
+    visit(ifStatement.elseClause,a)         // Add bytecode for else clause
+
+    // Add label for the end of the if, else statement
+    a.visitLabel(endLabel)
   }
 
   override def visitPrintStatement(printStatement: PrintStatement, a: MethodVisitor): Unit = {
@@ -71,6 +95,10 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
 
   override def visitIntegerLiteral(integerLiteral: IntegerLiteral, a: MethodVisitor): Unit = {
     a.visitLdcInsn(integerLiteral.value)
+  }
+
+  override def visitTrueLiteral(a: MethodVisitor): Unit = {
+    a.visitInsn(Opcodes.ICONST_0)
   }
 
   def visitMainClassType(fileName: String, mainClassType: MainClassType): Unit = {

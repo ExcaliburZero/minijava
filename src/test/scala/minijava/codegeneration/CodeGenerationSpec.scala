@@ -105,6 +105,30 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
     testOutput("HelloTimes", "6\n")
   }
 
+  it should "work on the IfTrue example" in {
+    val input = Main.readFile("examples/IfTrue.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isRight shouldBe true
+
+    val typeTable = typeCheckResult.right.get
+
+    val visitor = new CodeGenerationVisitor()
+
+    val mainClassType = typeTable.get("IfTrue").get.asInstanceOf[MainClassType]
+
+    visitor.visitMainClassType("IfTrue.minijava", mainClassType)
+
+    writeClassFile(visitor, "IfTrue.class")
+
+    testOutput("IfTrue", "1\n")
+  }
+
   private def writeClassFile(visitor: CodeGenerationVisitor, classFileName: String): Unit = {
     val fos = new FileOutputStream(classFileName)
     try {
