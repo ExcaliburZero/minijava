@@ -181,6 +181,8 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
   override def visitMethodCallExpression(methodCallExpression: MethodCallExpression, a: TypeVisitorContext): TypeDefinition = {
     val objectType = visit(methodCallExpression.objectExpression, a)
 
+    methodCallExpression.classType = Some(objectType)
+
     val methodName = methodCallExpression.methodName.name
 
     val location = LineColumn(methodCallExpression.line, methodCallExpression.column)

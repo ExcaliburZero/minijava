@@ -3,8 +3,9 @@ package minijava.codegeneration
 import java.io.FileOutputStream
 
 import minijava.Main
-import minijava.typechecking.{MainClassType, TypeChecking}
+import minijava.typechecking.{ClassType, MainClassType, TypeChecking}
 import org.scalatest._
+
 import sys.process._
 
 
@@ -281,6 +282,13 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
     )
   }
 
+  it should "work on the MethodCall example" in {
+    testProgram("examples/", "MethodCall.minijava",
+      "MethodCall",
+      "2\n"
+    )
+  }
+
   private def writeClassFiles(visitor: CodeGenerationVisitor): Unit = {
     for ((classFileName, classWriter) <- visitor.getClassWriters()) {
       val fos = new FileOutputStream(f"$classFileName.class")
@@ -307,8 +315,12 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
     val visitor = new CodeGenerationVisitor()
 
     val mainClassType = typeTable.get(mainClassName).get.asInstanceOf[MainClassType]
-
     visitor.visitMainClassType(fileName, mainClassType)
+
+    typeTable.types()
+      .filter(_.isInstanceOf[ClassType])
+      .map(_.asInstanceOf[ClassType])
+      .foreach(visitor.visitClassType(fileName, _))
 
     writeClassFiles(visitor)
 

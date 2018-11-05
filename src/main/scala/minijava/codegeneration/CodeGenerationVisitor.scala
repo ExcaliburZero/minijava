@@ -1,7 +1,7 @@
 package minijava.codegeneration
 
 import minijava.grammar._
-import minijava.typechecking.{MainClassType, Method}
+import minijava.typechecking.{ClassType, MainClassType, Method}
 import org.objectweb.asm.{ClassWriter, Label, MethodVisitor, Opcodes}
 
 import scala.collection.mutable.ArrayBuffer
@@ -97,6 +97,17 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     }
   }
 
+  override def visitMethodCallExpression(methodCallExpression: MethodCallExpression, a: MethodVisitor): Unit = {
+    visit(methodCallExpression.objectExpression, a)
+
+    a.visitMethodInsn(
+      Opcodes.INVOKEVIRTUAL,
+      methodCallExpression.classType.get.getName(),
+      methodCallExpression.methodName.name,
+      "()I"   // TODO: Use the actual parameter and return types
+    )
+  }
+
   override def visitIntegerLiteral(integerLiteral: IntegerLiteral, a: MethodVisitor): Unit = {
     a.visitLdcInsn(integerLiteral.value)
   }
@@ -107,6 +118,18 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
 
   override def visitFalseLiteral(a: MethodVisitor): Unit = {
     a.visitInsn(Opcodes.ICONST_1)
+  }
+
+  override def visitNewObjectExpression(newObjectExpression: NewObjectExpression, a: MethodVisitor): Unit = {
+    a.visitTypeInsn(Opcodes.NEW, newObjectExpression.className.name)
+    a.visitInsn(Opcodes.DUP)
+
+    a.visitMethodInsn(
+      Opcodes.INVOKESPECIAL,
+      newObjectExpression.className.name,
+      "<init>",
+      "()V"
+    )
   }
 
   override def visitNegatedExpression(negatedExpression: NegatedExpression, a: MethodVisitor): Unit = {
@@ -175,6 +198,72 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     visit(mainMethod.statements.head, methodVisitor)
 
     methodVisitor.visitInsn(Opcodes.RETURN)
+
+    methodVisitor.visitMaxs(2, 1) // TODO: do this better? Maybe have each visit return a max stack?
+
+    methodVisitor.visitEnd()
+  }
+
+  def visitClassType(fileName: String, classType: ClassType): Unit = {
+    val classWriter = new ClassWriter(true)
+
+    classWriters.append((classType.name, classWriter))
+
+    classWriter.visit(
+      49,
+      Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER,
+      classType.name,
+      null,
+      "java/lang/Object", // TODO: This likely should be the parent class
+      null
+    )
+
+    classWriter.visitSource(fileName, null)
+
+    // Constructor
+    val constructorVisitor = classWriter.visitMethod(
+      Opcodes.ACC_PUBLIC,
+      "<init>",
+      "()V",
+      null,
+      null
+    )
+
+    constructorVisitor.visitVarInsn(Opcodes.ALOAD, 0)
+    constructorVisitor.visitMethodInsn(
+      Opcodes.INVOKESPECIAL,
+      "java/lang/Object", // TODO: This should be replaced with the parent class
+      "<init>",
+      "()V"
+    )
+    constructorVisitor.visitInsn(Opcodes.RETURN)
+    constructorVisitor.visitMaxs(1, 1)
+    constructorVisitor.visitEnd()
+
+    // TODO: Add class instance variables
+
+    for (method <- classType.methods) visitMethod(classWriter, method)
+  }
+
+  private def visitMethod(classWriter: ClassWriter, method: Method): Unit = {
+    val methodVisitor = classWriter.visitMethod(
+      Opcodes.ACC_PUBLIC,
+      method.name,
+      "()I", // TODO: Replace with actual parameter and return types
+      null, // Was null
+      null
+    )
+
+    // Add the bytecode for the statements and the return expression
+    for (statement <- method.statements) visit(statement, methodVisitor)
+    visit(method.returnExpression.get, methodVisitor)
+
+    // Add a return bytecode for the correct return type
+    method.returnType match {
+      case "int" => methodVisitor.visitInsn(Opcodes.IRETURN)
+      case "void" => methodVisitor.visitInsn(Opcodes.RETURN)
+      case _ => ??? // TODO: Implement for the remaining types
+    }
 
     methodVisitor.visitMaxs(2, 1) // TODO: do this better? Maybe have each visit return a max stack?
 

@@ -1,0 +1,11 @@
+class MethodCall {
+    public static io void main(String[] a){
+        System.out.println(new MyClass().hi());
+    }
+}
+
+class MyClass {
+    public int hi() {
+        return 2;
+    }
+}
