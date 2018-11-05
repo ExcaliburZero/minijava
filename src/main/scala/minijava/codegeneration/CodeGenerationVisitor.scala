@@ -1,19 +1,62 @@
 package minijava.codegeneration
 
-import minijava.grammar.ASTVisitor
-import minijava.typechecking.MainClassType
-import org.objectweb.asm.{ClassWriter, Opcodes}
+import minijava.grammar.{ASTVisitor, IntegerLiteral, PrintStatement}
+import minijava.typechecking.{MainClassType, Method}
+import org.objectweb.asm.{ClassWriter, MethodVisitor, Opcodes}
 
-class CodeGenerationVisitor extends ASTVisitor[Unit, Unit] {
+class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   private val classWriter = new ClassWriter(true)
 
   def getClassWriter(): ClassWriter = {
     classWriter
   }
 
-  def visitMainClassType(fileName: String, mainClassType: MainClassType): Unit = {
-    //val mainClassId = classWriter.newClass(mainClassType.name)
+  private def visitMainMethod(mainMethod: Method): Unit = {
+    val methodVisitor = classWriter.visitMethod(
+      Opcodes.ACC_PUBLIC + Opcodes.ACC_STATIC,
+      mainMethod.name,
+      "([Ljava/lang/String;)V",
+      null,
+      null
+    )
 
+    assert(mainMethod.statements.length == 1)
+    visit(mainMethod.statements.head, methodVisitor)
+
+    methodVisitor.visitInsn(Opcodes.RETURN)
+
+    methodVisitor.visitMaxs(2, 1) // TODO: do this better? Maybe have each visit return a max stack?
+
+    methodVisitor.visitEnd()
+  }
+
+  override def visitPrintStatement(printStatement: PrintStatement, a: MethodVisitor): Unit = {
+    // Load up the static PrintStream so we can call println on it
+    a.visitFieldInsn(
+      Opcodes.GETSTATIC,
+      "java/lang/System",
+      "out",
+      "Ljava/io/PrintStream;"
+    )
+
+    // Add all the bytecode to determine the integer to print
+    visit(printStatement.expression, a)
+
+    // Call the println method to print out the integer from the expression
+    a.visitMethodInsn(
+      Opcodes.INVOKEVIRTUAL,
+      "java/io/PrintStream",
+      "println",
+      "(I)V"
+    )
+  }
+
+  override def visitIntegerLiteral(integerLiteral: IntegerLiteral, a: MethodVisitor): Unit = {
+    a.visitLdcInsn(integerLiteral.value)
+  }
+
+  def visitMainClassType(fileName: String, mainClassType: MainClassType): Unit = {
+    // Create main class
     classWriter.visit(
       49,
       Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER,
@@ -25,8 +68,7 @@ class CodeGenerationVisitor extends ASTVisitor[Unit, Unit] {
 
     classWriter.visitSource(fileName, null)
 
-    // constructor
-
+    // Constructor
     val constructorVisitor = classWriter.visitMethod(
       Opcodes.ACC_PUBLIC,
       "<init>",
@@ -46,38 +88,7 @@ class CodeGenerationVisitor extends ASTVisitor[Unit, Unit] {
     constructorVisitor.visitMaxs(1, 1)
     constructorVisitor.visitEnd()
 
-    // main method
-
-    val mainMethod = mainClassType.mainMethod
-
-    val methodVisitor = classWriter.visitMethod(
-      Opcodes.ACC_PUBLIC + Opcodes.ACC_STATIC,
-      mainMethod.name,
-      "([Ljava/lang/String;)V",
-      null,
-      null
-    )
-
-    methodVisitor.visitFieldInsn(
-      Opcodes.GETSTATIC,
-      "java/lang/System",
-      "out",
-      "Ljava/io/PrintStream;"
-    )
-
-    methodVisitor.visitLdcInsn(0)
-
-    methodVisitor.visitMethodInsn(
-      Opcodes.INVOKEVIRTUAL,
-      "java/io/PrintStream",
-      "println",
-      "(I)V"
-    )
-
-    methodVisitor.visitInsn(Opcodes.RETURN)
-
-    methodVisitor.visitMaxs(2, 1)
-
-    methodVisitor.visitEnd()
+    // Main method
+    visitMainMethod(mainClassType.mainMethod)
   }
 }
