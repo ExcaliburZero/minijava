@@ -1,0 +1,15 @@
+class ObjectVariables {
+    public static io void main(String[] a){
+        System.out.println(new Fac().greet(new Fac()));
+    }
+}
+
+class Fac {
+
+    public int greet(Fac f){
+        Fac g;
+        g = f;
+        return 2;
+    }
+
+}

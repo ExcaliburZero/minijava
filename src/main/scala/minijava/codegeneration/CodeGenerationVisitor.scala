@@ -85,11 +85,13 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     val localVariableIndex = method.localVariables.map(_.name).indexOf(assignmentStatement.name.name)
     val index = 1 + method.parameters.length + localVariableIndex
 
+    val localVariable = method.localVariables(localVariableIndex)
+
     // Push the expression to be assigned
     visit(assignmentStatement.expression, a)
 
     // Store the pushed value into the correct variable
-    a.visitIntInsn(Opcodes.ISTORE, index) // TODO: Change this to workm for all variable types
+    a.visitIntInsn(getStoreInsn(localVariable.typeName), index)
   }
 
   override def visitBinaryOperationExpression(binaryOperationExpression: BinaryOperationExpression, a: MethodVisitor): Unit = {
@@ -169,7 +171,9 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
         val index = getMethodVariable()*/
       case methodVariable: MethodVariable =>
         val index = getMethodVariableIndex(methodVariable, identifierExpression.name.name)
-        a.visitIntInsn(Opcodes.ILOAD, index)
+        val variableType = methodVariable.getTypeName(identifierExpression.name.name)
+
+        a.visitIntInsn(getLoadInsn(variableType), index)
       case _ => ???
     }
   }
@@ -330,7 +334,9 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
         local.typeName match {
           case "int" => "I"
           case "boolean" => "Z"
-          case _ => ???
+          case "void" => ???
+          case "int[]" => ???
+          case className => f"L$className;"
         },
         null,
         methodStartLabel,
@@ -349,9 +355,10 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     // Add a return bytecode for the correct return type
     method.returnType match {
       case "int" => methodVisitor.visitInsn(Opcodes.IRETURN)
-      case "boolean" => methodVisitor.visitInsn(Opcodes.IRETURN)
+      case "boolean" => methodVisitor.visitInsn(Opcodes.IRETURN)  // Apparently booleans are returned using IRETURN
       case "void" => methodVisitor.visitInsn(Opcodes.RETURN)
-      case _ => ??? // TODO: Implement for the remaining types
+      case "int[]" => ???
+      case _ => methodVisitor.visitInsn(Opcodes.LRETURN)
     }
 
     // Add the label to mark the end of the method
@@ -373,6 +380,26 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
         val localVariableIndex = method.localVariables.map(_.name).indexOf(variableName)
 
         1 + method.parameters.length + localVariableIndex
+    }
+  }
+
+  private def getLoadInsn(typeName: String): Int = {
+    typeName match {
+      case "int" => Opcodes.ILOAD
+      case "boolean" => Opcodes.ILOAD
+      case "void" => ???
+      case "int[]" => ???
+      case _ => Opcodes.ALOAD
+    }
+  }
+
+  private def getStoreInsn(typeName: String): Int = {
+    typeName match {
+      case "int" => Opcodes.ISTORE
+      case "boolean" => Opcodes.ISTORE
+      case "void" => ???
+      case "int[]" => ???
+      case _ => Opcodes.ASTORE
     }
   }
 }

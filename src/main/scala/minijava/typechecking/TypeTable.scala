@@ -56,7 +56,16 @@ sealed trait TypeDefinition {
 case object FailType extends TypeDefinition
 
 sealed trait VariableContext
-case class MethodVariable(method: Method, location: MethodVariableLocation) extends VariableContext
+case class MethodVariable(method: Method, location: MethodVariableLocation) extends VariableContext {
+  def getTypeName(variableName: String): String = {
+    location match {
+      case Parameter =>
+        method.parameters.find(_.name == variableName).get.typeName
+      case LocalVariable =>
+        method.localVariables.find(_.name == variableName).get.typeName
+    }
+  }
+}
 
 sealed trait MethodVariableLocation
 case object LocalVariable extends MethodVariableLocation
@@ -100,6 +109,9 @@ case class Method(name: String, isIO: Boolean, returnType: String, parameters: L
     t match {
       case "int" => "I"
       case "boolean" => "Z"
+      case "void" => ???
+      case "int[]" => ???
+      case className => f"L$className;"
     }
   }
 }
