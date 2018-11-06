@@ -99,6 +99,7 @@ case class Method(name: String, isIO: Boolean, returnType: String, parameters: L
   private def convertType(t: String): String = {
     t match {
       case "int" => "I"
+      case "boolean" => "Z"
     }
   }
 }

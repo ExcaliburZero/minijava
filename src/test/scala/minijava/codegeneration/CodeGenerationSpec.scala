@@ -317,6 +317,20 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
     )
   }
 
+  it should "work on the WhileLoop example" in {
+    testProgram("examples/", "WhileLoop.minijava",
+      "WhileLoop",
+      "5\n"
+    )
+  }
+
+  it should "work on the BooleanVariables example" in {
+    testProgram("examples/", "BooleanVariables.minijava",
+      "BooleanVariables",
+      "2\n"
+    )
+  }
+
   private def writeClassFiles(visitor: CodeGenerationVisitor): Unit = {
     for ((classFileName, classWriter) <- visitor.getClassWriters()) {
       val fos = new FileOutputStream(f"$classFileName.class")

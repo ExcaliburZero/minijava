@@ -37,6 +37,23 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     a.visitLabel(endLabel)
   }
 
+  override def visitWhileStatement(whileStatement: WhileStatement, a: MethodVisitor): Unit = {
+    val conditionLabel = new Label()
+    val bodyLabel = new Label()
+
+    // Jump to check the condition
+    a.visitJumpInsn(Opcodes.GOTO, conditionLabel)
+
+    // Add the label and bytecode for the body of the loop
+    a.visitLabel(bodyLabel)
+    visit(whileStatement.statement, a)
+
+    // Add the label and bytecode for the condition of the loop
+    a.visitLabel(conditionLabel)
+    visit(whileStatement.condition, a)
+    a.visitJumpInsn(Opcodes.IFEQ, bodyLabel)
+  }
+
   override def visitPrintStatement(printStatement: PrintStatement, a: MethodVisitor): Unit = {
     // Load up the static PrintStream so we can call println on it
     a.visitFieldInsn(
@@ -312,6 +329,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
         local.name,
         local.typeName match {
           case "int" => "I"
+          case "boolean" => "Z"
           case _ => ???
         },
         null,
@@ -331,6 +349,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     // Add a return bytecode for the correct return type
     method.returnType match {
       case "int" => methodVisitor.visitInsn(Opcodes.IRETURN)
+      case "boolean" => methodVisitor.visitInsn(Opcodes.IRETURN)
       case "void" => methodVisitor.visitInsn(Opcodes.RETURN)
       case _ => ??? // TODO: Implement for the remaining types
     }

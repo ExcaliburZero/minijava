@@ -1,0 +1,26 @@
+class BooleanVariables {
+    public static io void main(String[] a){
+        System.out.println(new Jane().hi2(true));
+    }
+}
+
+class Jane {
+    public boolean hi(boolean hello){
+        boolean goodbye;
+
+        goodbye = !hello;
+
+        return goodbye;
+    }
+
+    public int hi2(boolean hello) {
+        int out;
+        if (this.hi(hello)) {
+            out = 1;
+        } else {
+            out = 2;
+        }
+
+        return out;
+    }
+}
