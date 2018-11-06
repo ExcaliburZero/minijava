@@ -353,13 +353,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     visit(method.returnExpression.get, methodVisitor)
 
     // Add a return bytecode for the correct return type
-    method.returnType match {
-      case "int" => methodVisitor.visitInsn(Opcodes.IRETURN)
-      case "boolean" => methodVisitor.visitInsn(Opcodes.IRETURN)  // Apparently booleans are returned using IRETURN
-      case "void" => methodVisitor.visitInsn(Opcodes.RETURN)
-      case "int[]" => ???
-      case _ => methodVisitor.visitInsn(Opcodes.LRETURN)
-    }
+    methodVisitor.visitInsn(getReturnInsn(method.returnType))
 
     // Add the label to mark the end of the method
     methodVisitor.visitLabel(methodEndLabel)
@@ -400,6 +394,16 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       case "void" => ???
       case "int[]" => ???
       case _ => Opcodes.ASTORE
+    }
+  }
+
+  private def getReturnInsn(typeName: String): Int = {
+    typeName match {
+      case "int" => Opcodes.IRETURN
+      case "boolean" => Opcodes.IRETURN
+      case "void" => ???
+      case "int[]" => ???
+      case _ => Opcodes.ARETURN
     }
   }
 }
