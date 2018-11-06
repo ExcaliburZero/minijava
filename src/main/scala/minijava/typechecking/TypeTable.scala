@@ -96,16 +96,8 @@ sealed trait ClassLikeType extends TypeDefinition with VariableContext {
 case class ClassType(name: String, parentClass: Option[String], variables: List[Variable], methods: List[Method]) extends ClassLikeType
 case class MainClassType(name: String, mainMethod: Method) extends ClassLikeType
 
-case class Variable(name: String, typeName: String)
-case class Method(name: String, isIO: Boolean, returnType: String, parameters: List[Variable], localVariables: List[Variable], statements: List[Statement], returnExpression: Option[Expression]) {
-  def getSignature(): String = {
-    val paramStrings = parameters.map(_.typeName).map(convertType)
-    val returnString = convertType(returnType)
-
-    "(" + paramStrings.mkString("") + ")" + returnString
-  }
-
-  private def convertType(t: String): String = {
+object TypeDescription {
+  def convertType(t: String): String = {
     t match {
       case "int" => "I"
       case "boolean" => "Z"
@@ -113,6 +105,16 @@ case class Method(name: String, isIO: Boolean, returnType: String, parameters: L
       case "int[]" => ???
       case className => f"L$className;"
     }
+  }
+}
+
+case class Variable(name: String, typeName: String)
+case class Method(name: String, isIO: Boolean, returnType: String, parameters: List[Variable], localVariables: List[Variable], statements: List[Statement], returnExpression: Option[Expression]) {
+  def getSignature(): String = {
+    val paramStrings = parameters.map(_.typeName).map(TypeDescription.convertType)
+    val returnString = TypeDescription.convertType(returnType)
+
+    "(" + paramStrings.mkString("") + ")" + returnString
   }
 }
 

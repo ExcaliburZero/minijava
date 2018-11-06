@@ -345,6 +345,20 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
     )
   }
 
+  it should "work on the ClassVariable example" in {
+    testProgram("examples/", "ClassVariable.minijava",
+      "ClassVariable",
+      "10\n"
+    )
+  }
+
+  /*it should "work on the LinkedList example" in {
+    testProgram("examples/", "LinkedList.minijava",
+      "LinkedList",
+      "2\n"
+    )
+  }*/
+
   private def writeClassFiles(visitor: CodeGenerationVisitor): Unit = {
     for ((classFileName, classWriter) <- visitor.getClassWriters()) {
       val fos = new FileOutputStream(f"$classFileName.class")

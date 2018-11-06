@@ -1,0 +1,15 @@
+class ClassVariable {
+    public static io void main(String[] a){
+        System.out.println(new Fac().ComputeFac(10));
+    }
+}
+
+class Fac {
+    int a;
+
+    public int ComputeFac(int num){
+        a = num;
+        return a;
+    }
+
+}

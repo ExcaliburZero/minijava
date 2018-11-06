@@ -76,22 +76,45 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   }
 
   override def visitAssignmentStatement(assignmentStatement: AssignmentStatement, a: MethodVisitor): Unit = {
-    val methodVariable = assignmentStatement.context.get.asInstanceOf[MethodVariable]
+    assignmentStatement.context.get match {
+      case methodVariable: MethodVariable =>
 
-    assert(methodVariable.location == LocalVariable)
+        assert(methodVariable.location == LocalVariable)
 
-    val method = methodVariable.method
+        val method = methodVariable.method
 
-    val localVariableIndex = method.localVariables.map(_.name).indexOf(assignmentStatement.name.name)
-    val index = 1 + method.parameters.length + localVariableIndex
+        val localVariableIndex = method.localVariables.map(_.name).indexOf(assignmentStatement.name.name)
+        val index = 1 + method.parameters.length + localVariableIndex
 
-    val localVariable = method.localVariables(localVariableIndex)
+        val localVariable = method.localVariables(localVariableIndex)
 
-    // Push the expression to be assigned
-    visit(assignmentStatement.expression, a)
+        // Push the expression to be assigned
+        visit(assignmentStatement.expression, a)
 
-    // Store the pushed value into the correct variable
-    a.visitIntInsn(getStoreInsn(localVariable.typeName), index)
+        // Store the pushed value into the correct variable
+        a.visitIntInsn(getStoreInsn(localVariable.typeName), index)
+
+      case classType: ClassType =>
+        val variableName = assignmentStatement.name.name
+        val variableTypeName = classType.variables.filter(_.name == variableName).head.typeName
+
+        // Load the "this" object to access the class variable to set its value later
+        a.visitIntInsn(Opcodes.ALOAD, 0)
+
+        // Push the value to be assigned
+        visit(assignmentStatement.expression, a)
+
+        // Store the value into the class variable
+        a.visitFieldInsn(
+          Opcodes.PUTFIELD,
+          classType.name,
+          variableName,
+          TypeDescription.convertType(variableTypeName)
+        )
+    }
+
+    //val methodVariable = assignmentStatement.context.get.asInstanceOf[MethodVariable]
+    //assert(methodVariable.location == LocalVariable)
   }
 
   override def visitBinaryOperationExpression(binaryOperationExpression: BinaryOperationExpression, a: MethodVisitor): Unit = {
@@ -174,7 +197,20 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
         val variableType = methodVariable.getTypeName(identifierExpression.name.name)
 
         a.visitIntInsn(getLoadInsn(variableType), index)
-      case _ => ???
+      case classType: ClassType =>
+        val variableName = identifierExpression.name.name
+        val variableTypeName = classType.variables.filter(_.name == variableName).head.typeName
+
+        // Load the "this" object to access the class variable
+        a.visitIntInsn(Opcodes.ALOAD, 0)
+
+        // Push the class variable value
+        a.visitFieldInsn(
+          Opcodes.GETFIELD,
+          classType.name,
+          variableName,
+          TypeDescription.convertType(variableTypeName)
+        )
     }
   }
 
@@ -309,6 +345,18 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     constructorVisitor.visitEnd()
 
     // TODO: Add class instance variables
+    /*for (variable <- classType.variables) classWriter.newField(
+      classType.getName(),
+      variable.name,
+      TypeDescription.convertType(variable.typeName)
+    )*/
+    for (variable <- classType.variables) classWriter.visitField(
+      Opcodes.ACC_PUBLIC,
+      variable.name,
+      TypeDescription.convertType(variable.typeName),
+      null,
+      null
+    )
 
     for (method <- classType.methods) visitMethod(classWriter, method)
   }
