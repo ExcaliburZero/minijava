@@ -352,12 +352,12 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
     )
   }
 
-  /*it should "work on the LinkedList example" in {
+  it should "work on the LinkedList example" in {
     testProgram("examples/", "LinkedList.minijava",
       "LinkedList",
-      "2\n"
+      "25\n10000000\n39\n25\n10000000\n22\n39\n25\n1\n0\n10000000\n28\n22\n39\n25\n2220000\n-555\n-555\n28\n22\n25\n33300000\n22\n25\n44440000\n0\n"
     )
-  }*/
+  }
 
   private def writeClassFiles(visitor: CodeGenerationVisitor): Unit = {
     for ((classFileName, classWriter) <- visitor.getClassWriters()) {
