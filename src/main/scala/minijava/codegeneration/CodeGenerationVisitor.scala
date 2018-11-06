@@ -58,6 +58,25 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     )
   }
 
+  override def visitAssignmentStatement(assignmentStatement: AssignmentStatement, a: MethodVisitor): Unit = {
+    val methodVariable = assignmentStatement.context.get.asInstanceOf[MethodVariable]
+
+    assert(methodVariable.location == LocalVariable)
+
+    val method = methodVariable.method
+
+    val localVariableIndex = method.localVariables.map(_.name).indexOf(assignmentStatement.name.name)
+    val index = 1 + method.parameters.length + localVariableIndex
+
+    // Push the expression to be assigned
+    visit(assignmentStatement.expression, a)
+
+    // Store the pushed value into the correct variable
+    a.visitIntInsn(Opcodes.ISTORE, index)
+
+    //???
+  }
+
   override def visitBinaryOperationExpression(binaryOperationExpression: BinaryOperationExpression, a: MethodVisitor): Unit = {
     binaryOperationExpression.operator match {
       case Plus =>
@@ -127,10 +146,15 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
 
   override def visitIdentifierExpression(identifierExpression: IdentifierExpression, a: MethodVisitor): Unit = {
     identifierExpression.context.get match {
-      case MethodVariable(method, Parameter) =>
+      /*case MethodVariable(method, Parameter) =>
         // TODO: Handle other types of variables
         val paramIndex = method.parameters.map(_.name).indexOf(identifierExpression.name.name)
         a.visitIntInsn(Opcodes.ILOAD, 1 + paramIndex)
+      case MethodVariable(method, LocalVariable) =>
+        val index = getMethodVariable()*/
+      case methodVariable: MethodVariable =>
+        val index = getMethodVariableIndex(methodVariable, identifierExpression.name.name)
+        a.visitIntInsn(Opcodes.ILOAD, index)
       case _ => ???
     }
   }
@@ -261,6 +285,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   }
 
   private def visitMethod(classWriter: ClassWriter, method: Method): Unit = {
+    // Create the method
     val methodVisitor = classWriter.visitMethod(
       Opcodes.ACC_PUBLIC,
       method.name,
@@ -268,6 +293,28 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       null,
       null
     )
+
+    // Create labels to mark the beginning and end of the method in order to mark the scope of the local variables
+    val methodStartLabel = new Label()
+    val methodEndLabel = new Label()
+
+    // Add the local variables
+    for ((local, index) <- method.localVariables.zipWithIndex) {
+      methodVisitor.visitLocalVariable(
+        local.name,
+        local.typeName match {
+          case "int" => "I"
+          case _ => ???
+        },
+        null,
+        methodStartLabel,
+        methodEndLabel,
+        index + method.parameters.length + 1
+      )
+    }
+
+    // Add the label to mark the start of the methof
+    methodVisitor.visitLabel(methodStartLabel)
 
     // Add the bytecode for the statements and the return expression
     for (statement <- method.statements) visit(statement, methodVisitor)
@@ -280,8 +327,25 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       case _ => ??? // TODO: Implement for the remaining types
     }
 
-    methodVisitor.visitMaxs(2, 1) // TODO: do this better? Maybe have each visit return a max stack?
+    // Add the label to mark the end of the method
+    methodVisitor.visitLabel(methodEndLabel)
+
+    // Specify the max stack size and number of local variables for the method
+    methodVisitor.visitMaxs(2, method.localVariables.length) // TODO: do this better? Maybe have each visit return a max stack?
 
     methodVisitor.visitEnd()
+  }
+
+  private def getMethodVariableIndex(methodVariable: MethodVariable, variableName: String): Int = {
+    methodVariable match {
+      case MethodVariable(method, Parameter) =>
+        val paramIndex = method.parameters.map(_.name).indexOf(variableName)
+
+        1 + paramIndex
+      case MethodVariable(method, LocalVariable) =>
+        val localVariableIndex = method.localVariables.map(_.name).indexOf(variableName)
+
+        1 + method.parameters.length + localVariableIndex
+    }
   }
 }

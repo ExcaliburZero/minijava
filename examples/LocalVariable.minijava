@@ -1,0 +1,19 @@
+class LocalVariable {
+    public static io void main(String[] a){
+        System.out.println(new Foo().bar(5));
+    }
+}
+
+class Foo {
+    public io int bar(int a) {
+        int b;
+        if (a < 2) {
+            b = 2;
+            System.out.println(0);
+        } else {
+            b = 3;
+            System.out.println(1);
+        }
+        return b;
+    }
+}

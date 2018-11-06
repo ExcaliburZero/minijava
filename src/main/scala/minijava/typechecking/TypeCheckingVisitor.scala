@@ -87,7 +87,7 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     val expressionType = visit(assignmentStatement.expression, a)
     val (variableType, variableContext) = getVarType(assignmentStatement.name.name, a.curMethod, a.curClass, a.typeTable, location)
 
-    // TODO: store variable context
+    assignmentStatement.context = variableContext
 
     TypeDefinition.conformsTo(expressionType, variableType, a.typeTable) match {
       case Some(t) => t

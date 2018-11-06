@@ -29,7 +29,9 @@ case class StatementBlock(statements: List[Statement]) extends Statement
 case class IfStatement(condition: Expression, thenClause: Statement, elseClause: Statement, line: Int) extends Statement
 case class WhileStatement(condition: Expression, statement: Statement, line: Int) extends Statement
 case class PrintStatement(expression: Expression, line: Int) extends Statement
-case class AssignmentStatement(name: Identifier, expression: Expression, line: Int) extends Statement
+case class AssignmentStatement(name: Identifier, expression: Expression, line: Int) extends Statement {
+  var context: Option[VariableContext] = None
+}
 case class ArrayAssignmentStatement(name: Identifier, indexExpression: Expression, valueExpression: Expression, line: Int) extends Statement
 
 sealed trait Expression extends ASTNode
