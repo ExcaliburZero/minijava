@@ -78,21 +78,14 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   override def visitAssignmentStatement(assignmentStatement: AssignmentStatement, a: MethodVisitor): Unit = {
     assignmentStatement.context.get match {
       case methodVariable: MethodVariable =>
-
-        assert(methodVariable.location == LocalVariable)
-
-        val method = methodVariable.method
-
-        val localVariableIndex = method.localVariables.map(_.name).indexOf(assignmentStatement.name.name)
-        val index = 1 + method.parameters.length + localVariableIndex
-
-        val localVariable = method.localVariables(localVariableIndex)
+        // Get the variable info and index
+        val (variable, index) = getMethodVariableWithIndex(methodVariable, assignmentStatement.name.name)
 
         // Push the expression to be assigned
         visit(assignmentStatement.expression, a)
 
         // Store the pushed value into the correct variable
-        a.visitIntInsn(getStoreInsn(localVariable.typeName), index)
+        a.visitIntInsn(getStoreInsn(variable.typeName), index)
 
       case classType: ClassType =>
         val variableName = assignmentStatement.name.name
@@ -112,9 +105,6 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
           TypeDescription.convertType(variableTypeName)
         )
     }
-
-    //val methodVariable = assignmentStatement.context.get.asInstanceOf[MethodVariable]
-    //assert(methodVariable.location == LocalVariable)
   }
 
   override def visitBinaryOperationExpression(binaryOperationExpression: BinaryOperationExpression, a: MethodVisitor): Unit = {
@@ -193,7 +183,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       case MethodVariable(method, LocalVariable) =>
         val index = getMethodVariable()*/
       case methodVariable: MethodVariable =>
-        val index = getMethodVariableIndex(methodVariable, identifierExpression.name.name)
+        val index = getMethodVariableWithIndex(methodVariable, identifierExpression.name.name)._2
         val variableType = methodVariable.getTypeName(identifierExpression.name.name)
 
         a.visitIntInsn(getLoadInsn(variableType), index)
@@ -412,16 +402,16 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     methodVisitor.visitEnd()
   }
 
-  private def getMethodVariableIndex(methodVariable: MethodVariable, variableName: String): Int = {
+  private def getMethodVariableWithIndex(methodVariable: MethodVariable, variableName: String): (Variable, Int) = {
     methodVariable match {
       case MethodVariable(method, Parameter) =>
         val paramIndex = method.parameters.map(_.name).indexOf(variableName)
 
-        1 + paramIndex
+        (method.parameters(paramIndex), 1 + paramIndex)
       case MethodVariable(method, LocalVariable) =>
         val localVariableIndex = method.localVariables.map(_.name).indexOf(variableName)
 
-        1 + method.parameters.length + localVariableIndex
+        (method.localVariables(localVariableIndex), 1 + method.parameters.length + localVariableIndex)
     }
   }
 
