@@ -85,7 +85,9 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     val location = LineNumber(assignmentStatement.line)
 
     val expressionType = visit(assignmentStatement.expression, a)
-    val variableType = getVarType(assignmentStatement.name.name, a.curMethod, a.curClass, a.typeTable, location)
+    val (variableType, variableContext) = getVarType(assignmentStatement.name.name, a.curMethod, a.curClass, a.typeTable, location)
+
+    // TODO: store variable context
 
     TypeDefinition.conformsTo(expressionType, variableType, a.typeTable) match {
       case Some(t) => t
@@ -111,7 +113,9 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
       case None => failTypeCheck(valueType, PrimitiveIntType, a.typeTable, location, "array assignment value expression")
     }
 
-    val arrayType = getVarType(arrayAssignmentStatement.name.name, a.curMethod, a.curClass, a.typeTable, location)
+    val (arrayType, arrayContext) = getVarType(arrayAssignmentStatement.name.name, a.curMethod, a.curClass, a.typeTable, location)
+
+    // TODO: store array context
 
     TypeDefinition.conformsTo(arrayType, PrimitiveIntArrayType, a.typeTable) match {
       case Some(t) => t
@@ -193,7 +197,9 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
           yield visit(p, a)
 
         getMatchingMethod(objectType.asInstanceOf[ClassType], methodName, parameterTypes, a) match {
-          case Some(m) => a.typeTable.get(m.returnType).get
+          case Some(m) =>
+            methodCallExpression.method = Some(m)
+            a.typeTable.get(m.returnType).get
           case None => failUnknownMethod(objectType.getName(), methodName, parameterTypes, location)
         }
       case FailType => FailType
@@ -217,7 +223,11 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     val varName = identifierExpression.name.name
     val location = LineColumn(identifierExpression.line, identifierExpression.column)
 
-    getVarType(varName, a.curMethod, a.curClass, a.typeTable, location)
+    val (varType, varContext) = getVarType(varName, a.curMethod, a.curClass, a.typeTable, location)
+
+    identifierExpression.context = varContext
+
+    varType
   }
 
   override def visitThisLiteral(a: TypeVisitorContext): TypeDefinition = {
@@ -271,13 +281,13 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     * @param location The location in the code that this check is for. (used for error messages)
     * @return Some variable type if one is found, else None
     */
-  private def getVarType(name: String, curMethod: Method, curClass: ClassLikeType, typeTable: TypeTable, location: Location): TypeDefinition = {
+  private def getVarType(name: String, curMethod: Method, curClass: ClassLikeType, typeTable: TypeTable, location: Location): (TypeDefinition, Option[VariableContext]) = {
     // Look at the local variables
     val localNameMatches = curMethod.localVariables
       .filter(lv => lv.name == name)
 
     localNameMatches.headOption match {
-      case Some(t) => return typeTable.get(t.typeName).get
+      case Some(t) => return (typeTable.get(t.typeName).get, Some(MethodVariable(curMethod, LocalVariable)))
       case None =>
     }
 
@@ -286,7 +296,7 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
       .filter(lv => lv.name == name)
 
     paramNameMatches.headOption match {
-      case Some(t) => typeTable.get(t.typeName).get
+      case Some(t) => (typeTable.get(t.typeName).get, Some(MethodVariable(curMethod, Parameter)))
       case None =>
         // If it is not a parameter, then check if it is a class variable
         getVarTypeClass(name, curClass, typeTable, location)
@@ -304,13 +314,13 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     * @return Some variable type if one is found, else None
     */
   @tailrec
-  private def getVarTypeClass(name: String, classLikeType: ClassLikeType, typeTable: TypeTable, location: Location): TypeDefinition = {
+  private def getVarTypeClass(name: String, classLikeType: ClassLikeType, typeTable: TypeTable, location: Location): (TypeDefinition, Option[VariableContext]) = {
     // Look at the variables for this class
     val classNameMatches = classLikeType.getVariables()
       .filter(cv => cv.name == name)
 
     classNameMatches.headOption match {
-      case Some(t) => return typeTable.get(t.typeName).get
+      case Some(t) => return (typeTable.get(t.typeName).get, Some(classLikeType))
       case None =>
     }
 
@@ -323,7 +333,7 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
         }
       case None =>
         // If there is no parent class to check, then it must be an unknown variable
-        failVariableNotFound(name, location)
+        (failVariableNotFound(name, location), None)
     }
   }
 

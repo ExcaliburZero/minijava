@@ -1,6 +1,6 @@
 package minijava.grammar
 
-import minijava.typechecking.{Method, TypeDefinition}
+import minijava.typechecking.{ClassType, Method, TypeDefinition, VariableContext}
 
 sealed trait ASTNode
 
@@ -32,9 +32,7 @@ case class PrintStatement(expression: Expression, line: Int) extends Statement
 case class AssignmentStatement(name: Identifier, expression: Expression, line: Int) extends Statement
 case class ArrayAssignmentStatement(name: Identifier, indexExpression: Expression, valueExpression: Expression, line: Int) extends Statement
 
-sealed trait Expression extends ASTNode {
-  var valueType: Option[TypeDefinition] = None
-}
+sealed trait Expression extends ASTNode
 case class BinaryOperationExpression(firstExpression: Expression, operator: BinaryOperator, secondExpression: Expression, line: Int, column: Int) extends Expression
 case class ArrayAccessExpression(arrayExpression: Expression, indexExpression: Expression, line: Int, column: Int) extends Expression
 case class ArrayLengthExpression(arrayExpression: Expression) extends Expression
@@ -45,7 +43,9 @@ case class MethodCallExpression(objectExpression: Expression, methodName: Identi
 case class IntegerLiteral(value: Int) extends Expression
 case object TrueLiteral extends Expression
 case object FalseLiteral extends Expression
-case class IdentifierExpression(name: Identifier, line: Int, column: Int) extends Expression
+case class IdentifierExpression(name: Identifier, line: Int, column: Int) extends Expression {
+  var context: Option[VariableContext] = None
+}
 case object ThisLiteral extends Expression
 case class NewIntArrayExpression(lengthExpression: Expression, line: Int, column: Int) extends Expression
 case class NewObjectExpression(className: Identifier, line: Int, column: Int) extends Expression

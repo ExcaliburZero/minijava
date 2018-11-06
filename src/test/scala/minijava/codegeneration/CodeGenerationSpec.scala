@@ -289,6 +289,20 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
     )
   }
 
+  it should "work on the MethodParameter example" in {
+    testProgram("examples/", "MethodParameter.minijava",
+      "MethodParameter",
+      "7\n"
+    )
+  }
+
+  it should "work on the MethodMultipleParameters example" in {
+    testProgram("examples/", "MethodMultipleParameters.minijava",
+      "MethodMultipleParameters",
+      "-1\n"
+    )
+  }
+
   private def writeClassFiles(visitor: CodeGenerationVisitor): Unit = {
     for ((classFileName, classWriter) <- visitor.getClassWriters()) {
       val fos = new FileOutputStream(f"$classFileName.class")

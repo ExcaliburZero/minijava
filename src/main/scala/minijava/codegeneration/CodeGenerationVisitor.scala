@@ -1,7 +1,7 @@
 package minijava.codegeneration
 
 import minijava.grammar._
-import minijava.typechecking.{ClassType, MainClassType, Method}
+import minijava.typechecking._
 import org.objectweb.asm.{ClassWriter, Label, MethodVisitor, Opcodes}
 
 import scala.collection.mutable.ArrayBuffer
@@ -98,13 +98,18 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   }
 
   override def visitMethodCallExpression(methodCallExpression: MethodCallExpression, a: MethodVisitor): Unit = {
+    // Push the object to call the method on
     visit(methodCallExpression.objectExpression, a)
 
+    // Push all of the parameters
+    methodCallExpression.parameters.foreach(visit(_, a))
+
+    // Call the method
     a.visitMethodInsn(
       Opcodes.INVOKEVIRTUAL,
       methodCallExpression.classType.get.getName(),
       methodCallExpression.methodName.name,
-      "()I"   // TODO: Use the actual parameter and return types
+      methodCallExpression.method.get.getSignature()
     )
   }
 
@@ -118,6 +123,16 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
 
   override def visitFalseLiteral(a: MethodVisitor): Unit = {
     a.visitInsn(Opcodes.ICONST_1)
+  }
+
+  override def visitIdentifierExpression(identifierExpression: IdentifierExpression, a: MethodVisitor): Unit = {
+    identifierExpression.context.get match {
+      case MethodVariable(method, Parameter) =>
+        // TODO: Handle other types of variables
+        val paramIndex = method.parameters.map(_.name).indexOf(identifierExpression.name.name)
+        a.visitIntInsn(Opcodes.ILOAD, 1 + paramIndex)
+      case _ => ???
+    }
   }
 
   override def visitNewObjectExpression(newObjectExpression: NewObjectExpression, a: MethodVisitor): Unit = {
@@ -249,8 +264,8 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     val methodVisitor = classWriter.visitMethod(
       Opcodes.ACC_PUBLIC,
       method.name,
-      "()I", // TODO: Replace with actual parameter and return types
-      null, // Was null
+      method.getSignature(),
+      null,
       null
     )
 

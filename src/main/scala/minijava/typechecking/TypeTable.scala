@@ -55,7 +55,14 @@ sealed trait TypeDefinition {
 }
 case object FailType extends TypeDefinition
 
-sealed trait ClassLikeType extends TypeDefinition {
+sealed trait VariableContext
+case class MethodVariable(method: Method, location: MethodVariableLocation) extends VariableContext
+
+sealed trait MethodVariableLocation
+case object LocalVariable extends MethodVariableLocation
+case object Parameter extends MethodVariableLocation
+
+sealed trait ClassLikeType extends TypeDefinition with VariableContext {
   def getParentClass(): Option[String] = {
     this match {
       case classType: ClassType => classType.parentClass
@@ -81,7 +88,20 @@ case class ClassType(name: String, parentClass: Option[String], variables: List[
 case class MainClassType(name: String, mainMethod: Method) extends ClassLikeType
 
 case class Variable(name: String, typeName: String)
-case class Method(name: String, isIO: Boolean, returnType: String, parameters: List[Variable], localVariables: List[Variable], statements: List[Statement], returnExpression: Option[Expression])
+case class Method(name: String, isIO: Boolean, returnType: String, parameters: List[Variable], localVariables: List[Variable], statements: List[Statement], returnExpression: Option[Expression]) {
+  def getSignature(): String = {
+    val paramStrings = parameters.map(_.typeName).map(convertType)
+    val returnString = convertType(returnType)
+
+    "(" + paramStrings.mkString("") + ")" + returnString
+  }
+
+  private def convertType(t: String): String = {
+    t match {
+      case "int" => "I"
+    }
+  }
+}
 
 
 sealed trait TypeTableError

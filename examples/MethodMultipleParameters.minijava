@@ -1,0 +1,11 @@
+class MethodMultipleParameters {
+    public static io void main(String[] a){
+        System.out.println(new Foo().bar(5, 6));
+    }
+}
+
+class Foo {
+    public int bar(int a, int b) {
+        return a - b;
+    }
+}

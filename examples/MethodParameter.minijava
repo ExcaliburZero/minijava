@@ -1,0 +1,11 @@
+class MethodParameter {
+    public static io void main(String[] a){
+        System.out.println(new Foo().bar(5));
+    }
+}
+
+class Foo {
+    public int bar(int a) {
+        return a + 2;
+    }
+}
