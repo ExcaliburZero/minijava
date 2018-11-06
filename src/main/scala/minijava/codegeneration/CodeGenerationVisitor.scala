@@ -72,9 +72,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     visit(assignmentStatement.expression, a)
 
     // Store the pushed value into the correct variable
-    a.visitIntInsn(Opcodes.ISTORE, index)
-
-    //???
+    a.visitIntInsn(Opcodes.ISTORE, index) // TODO: Change this to workm for all variable types
   }
 
   override def visitBinaryOperationExpression(binaryOperationExpression: BinaryOperationExpression, a: MethodVisitor): Unit = {
@@ -159,10 +157,19 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     }
   }
 
+  override def visitThisLiteral(a: MethodVisitor): Unit = {
+    // Push the "this" object
+    a.visitIntInsn(Opcodes.ALOAD, 0)
+  }
+
   override def visitNewObjectExpression(newObjectExpression: NewObjectExpression, a: MethodVisitor): Unit = {
+    // Create the new object instance
     a.visitTypeInsn(Opcodes.NEW, newObjectExpression.className.name)
+
+    // Duplicate the object so that it will remain pushed after the constructor is called on it
     a.visitInsn(Opcodes.DUP)
 
+    // Call the class' constructor
     a.visitMethodInsn(
       Opcodes.INVOKESPECIAL,
       newObjectExpression.className.name,
@@ -172,9 +179,10 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   }
 
   override def visitNegatedExpression(negatedExpression: NegatedExpression, a: MethodVisitor): Unit = {
+    // Push the value to be negated
     visit(negatedExpression.expression, a)
 
-    // XOR the value with 1 to negate it, 0 => 1 and 1 => 0
+    // XOR the boolean value with 1 to negate it, 0 => 1 and 1 => 0
     a.visitInsn(Opcodes.ICONST_1)
     a.visitInsn(Opcodes.IXOR)
   }
@@ -313,7 +321,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       )
     }
 
-    // Add the label to mark the start of the methof
+    // Add the label to mark the start of the method
     methodVisitor.visitLabel(methodStartLabel)
 
     // Add the bytecode for the statements and the return expression
