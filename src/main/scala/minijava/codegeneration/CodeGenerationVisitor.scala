@@ -7,6 +7,8 @@ import org.objectweb.asm.{ClassWriter, Label, MethodVisitor, Opcodes}
 import scala.collection.mutable.ArrayBuffer
 
 class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
+  private val INT_TYPE = 10
+
   private val classWriters = new ArrayBuffer[(String, ClassWriter)]()
 
   def getClassWriters(): List[(String, ClassWriter)] = {
@@ -107,6 +109,28 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     }
   }
 
+  override def visitArrayAssignmentStatement(arrayAssignmentStatement: ArrayAssignmentStatement, a: MethodVisitor): Unit = {
+    arrayAssignmentStatement.context.get match {
+      case methodVariable: MethodVariable =>
+        // Get the variable info and index
+        val (variable, index) = getMethodVariableWithIndex(methodVariable, arrayAssignmentStatement.name.name)
+
+        // Load the array to store the value in
+        a.visitIntInsn(getLoadInsn(variable.typeName), index)
+
+        // Push the array index to store the value in
+        visit(arrayAssignmentStatement.indexExpression, a)
+
+        // Push the value to store
+        visit(arrayAssignmentStatement.valueExpression, a)
+
+        // Store the value into the array
+        a.visitInsn(Opcodes.IASTORE)
+      case classType: ClassType =>
+        ???
+    }
+  }
+
   override def visitBinaryOperationExpression(binaryOperationExpression: BinaryOperationExpression, a: MethodVisitor): Unit = {
     binaryOperationExpression.operator match {
       case Plus =>
@@ -146,6 +170,17 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     }
   }
 
+  override def visitArrayAccessExpression(arrayAccessExpression: ArrayAccessExpression, a: MethodVisitor): Unit = {
+    // Push the array to access
+    visit(arrayAccessExpression.arrayExpression, a)
+
+    // Push the index to access
+    visit(arrayAccessExpression.indexExpression, a)
+
+    // Get the value out of the array
+    a.visitInsn(Opcodes.IALOAD)
+  }
+
   override def visitMethodCallExpression(methodCallExpression: MethodCallExpression, a: MethodVisitor): Unit = {
     // Push the object to call the method on
     visit(methodCallExpression.objectExpression, a)
@@ -176,12 +211,6 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
 
   override def visitIdentifierExpression(identifierExpression: IdentifierExpression, a: MethodVisitor): Unit = {
     identifierExpression.context.get match {
-      /*case MethodVariable(method, Parameter) =>
-        // TODO: Handle other types of variables
-        val paramIndex = method.parameters.map(_.name).indexOf(identifierExpression.name.name)
-        a.visitIntInsn(Opcodes.ILOAD, 1 + paramIndex)
-      case MethodVariable(method, LocalVariable) =>
-        val index = getMethodVariable()*/
       case methodVariable: MethodVariable =>
         val index = getMethodVariableWithIndex(methodVariable, identifierExpression.name.name)._2
         val variableType = methodVariable.getTypeName(identifierExpression.name.name)
@@ -207,6 +236,14 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   override def visitThisLiteral(a: MethodVisitor): Unit = {
     // Push the "this" object
     a.visitIntInsn(Opcodes.ALOAD, 0)
+  }
+
+  override def visitNewIntArrayExpression(intArrayExpression: NewIntArrayExpression, a: MethodVisitor): Unit = {
+    // Push the value for the array length
+    visit(intArrayExpression.lengthExpression, a)
+
+    // Create the array
+    a.visitIntInsn(Opcodes.NEWARRAY, INT_TYPE)
   }
 
   override def visitNewObjectExpression(newObjectExpression: NewObjectExpression, a: MethodVisitor): Unit = {
@@ -373,7 +410,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
           case "int" => "I"
           case "boolean" => "Z"
           case "void" => ???
-          case "int[]" => ???
+          case "int[]" => "[I"
           case className => f"L$className;"
         },
         null,
@@ -417,28 +454,25 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
 
   private def getLoadInsn(typeName: String): Int = {
     typeName match {
-      case "int" => Opcodes.ILOAD
-      case "boolean" => Opcodes.ILOAD
+      case "int" | "boolean" => Opcodes.ILOAD
       case "void" => ???
-      case "int[]" => ???
+      case "int[]" => Opcodes.ALOAD
       case _ => Opcodes.ALOAD
     }
   }
 
   private def getStoreInsn(typeName: String): Int = {
     typeName match {
-      case "int" => Opcodes.ISTORE
-      case "boolean" => Opcodes.ISTORE
+      case "int" | "boolean" => Opcodes.ISTORE
       case "void" => ???
-      case "int[]" => ???
+      case "int[]" => Opcodes.ASTORE
       case _ => Opcodes.ASTORE
     }
   }
 
   private def getReturnInsn(typeName: String): Int = {
     typeName match {
-      case "int" => Opcodes.IRETURN
-      case "boolean" => Opcodes.IRETURN
+      case "int" | "boolean" => Opcodes.IRETURN
       case "void" => ???
       case "int[]" => ???
       case _ => Opcodes.ARETURN

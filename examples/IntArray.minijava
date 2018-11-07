@@ -1,0 +1,19 @@
+class IntArray {
+    public static io void main(String[] a){
+        System.out.println(new Fac().ComputeFac(10));
+    }
+}
+
+class Fac {
+
+    public int ComputeFac(int num){
+        int[] num_aux;
+        num_aux = new int[5];
+        if (num < 1)
+            num_aux[0] = 7;
+        else 
+            num_aux[0] = 20;
+        return num_aux[0];
+    }
+
+}

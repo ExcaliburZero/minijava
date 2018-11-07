@@ -32,7 +32,9 @@ case class PrintStatement(expression: Expression, line: Int) extends Statement
 case class AssignmentStatement(name: Identifier, expression: Expression, line: Int) extends Statement {
   var context: Option[VariableContext] = None
 }
-case class ArrayAssignmentStatement(name: Identifier, indexExpression: Expression, valueExpression: Expression, line: Int) extends Statement
+case class ArrayAssignmentStatement(name: Identifier, indexExpression: Expression, valueExpression: Expression, line: Int) extends Statement {
+  var context: Option[VariableContext] = None
+}
 
 sealed trait Expression extends ASTNode
 case class BinaryOperationExpression(firstExpression: Expression, operator: BinaryOperator, secondExpression: Expression, line: Int, column: Int) extends Expression

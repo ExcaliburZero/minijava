@@ -115,7 +115,7 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
 
     val (arrayType, arrayContext) = getVarType(arrayAssignmentStatement.name.name, a.curMethod, a.curClass, a.typeTable, location)
 
-    // TODO: store array context
+    arrayAssignmentStatement.context = arrayContext
 
     TypeDefinition.conformsTo(arrayType, PrimitiveIntArrayType, a.typeTable) match {
       case Some(t) => t
