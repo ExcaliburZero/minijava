@@ -102,7 +102,7 @@ object TypeDescription {
       case "int" => "I"
       case "boolean" => "Z"
       case "void" => ???
-      case "int[]" => ???
+      case "int[]" => "[I"
       case className => f"L$className;"
     }
   }

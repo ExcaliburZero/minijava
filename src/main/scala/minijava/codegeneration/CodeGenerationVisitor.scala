@@ -127,7 +127,28 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
         // Store the value into the array
         a.visitInsn(Opcodes.IASTORE)
       case classType: ClassType =>
-        ???
+        val variableName = arrayAssignmentStatement.name.name
+        val variableTypeName = classType.variables.filter(_.name == variableName).head.typeName
+
+        // Load the "this" object to access the class variable to set its value later
+        a.visitIntInsn(Opcodes.ALOAD, 0)
+
+        // Load the variable from the "this" object
+        a.visitFieldInsn(
+          Opcodes.GETFIELD,
+          classType.name,
+          variableName,
+          TypeDescription.convertType(variableTypeName)
+        )
+
+        // Push the array index to store the value in
+        visit(arrayAssignmentStatement.indexExpression, a)
+
+        // Push the value to store
+        visit(arrayAssignmentStatement.valueExpression, a)
+
+        // Store the value into the array
+        a.visitInsn(Opcodes.IASTORE)
     }
   }
 

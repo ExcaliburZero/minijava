@@ -1,0 +1,19 @@
+class IntArrayClassVariable {
+    public static io void main(String[] a){
+        System.out.println(new Fac().ComputeFac(0));
+    }
+}
+
+class Fac {
+    int[] num_aux;
+
+    public int ComputeFac(int num){
+        num_aux = new int[5];
+        if (num < 1)
+            num_aux[2] = 9;
+        else 
+            num_aux[2] = 19;
+        return num_aux[2];
+    }
+
+}
