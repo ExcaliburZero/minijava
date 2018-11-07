@@ -495,7 +495,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     typeName match {
       case "int" | "boolean" => Opcodes.IRETURN
       case "void" => ???
-      case "int[]" => ???
+      case "int[]" => Opcodes.ARETURN
       case _ => Opcodes.ARETURN
     }
   }
