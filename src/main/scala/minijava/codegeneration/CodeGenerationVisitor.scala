@@ -367,6 +367,8 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   def visitClassType(fileName: String, classType: ClassType): Unit = {
     val classWriter = new ClassWriter(true)
 
+    val parentClass = classType.getParentClass().getOrElse("java/lang/Object")
+
     classWriters.append((classType.name, classWriter))
 
     classWriter.visit(
@@ -374,13 +376,13 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER,
       classType.name,
       null,
-      "java/lang/Object", // TODO: This likely should be the parent class
+      parentClass,
       null
     )
 
     classWriter.visitSource(fileName, null)
 
-    // Constructor
+    // Add class constructor
     val constructorVisitor = classWriter.visitMethod(
       Opcodes.ACC_PUBLIC,
       "<init>",
@@ -392,7 +394,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     constructorVisitor.visitVarInsn(Opcodes.ALOAD, 0)
     constructorVisitor.visitMethodInsn(
       Opcodes.INVOKESPECIAL,
-      "java/lang/Object", // TODO: This should be replaced with the parent class
+      parentClass,
       "<init>",
       "()V"
     )
@@ -400,12 +402,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     constructorVisitor.visitMaxs(1, 1)
     constructorVisitor.visitEnd()
 
-    // TODO: Add class instance variables
-    /*for (variable <- classType.variables) classWriter.newField(
-      classType.getName(),
-      variable.name,
-      TypeDescription.convertType(variable.typeName)
-    )*/
+    // Add class instance variables
     for (variable <- classType.variables) classWriter.visitField(
       Opcodes.ACC_PUBLIC,
       variable.name,
@@ -414,6 +411,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       null
     )
 
+    // Add class methods
     for (method <- classType.methods) visitMethod(classWriter, method)
   }
 

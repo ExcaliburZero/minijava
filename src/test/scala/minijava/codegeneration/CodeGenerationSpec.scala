@@ -422,6 +422,13 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
     )
   }
 
+  it should "work on the TreeVisitor example" in {
+    testProgram("examples/", "TreeVisitor.minijava",
+      "TreeVisitor",
+      "16\n100000000\n4\n8\n12\n14\n16\n20\n24\n28\n100000000\n50000000\n333\n333\n333\n28\n24\n333\n20\n16\n333\n333\n333\n14\n12\n8\n333\n4\n100000000\n1\n1\n1\n0\n1\n4\n8\n14\n16\n20\n24\n28\n0\n0\n"
+    )
+  }
+
   private def writeClassFiles(visitor: CodeGenerationVisitor): Unit = {
     for ((classFileName, classWriter) <- visitor.getClassWriters()) {
       val fos = new FileOutputStream(f"$classFileName.class")
