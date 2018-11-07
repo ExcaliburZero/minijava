@@ -387,6 +387,20 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
     )
   }
 
+  it should "work on the IntArrayLength example" in {
+    testProgram("examples/", "IntArrayLength.minijava",
+      "IntArrayLength",
+      "8\n"
+    )
+  }
+
+  /*it should "work on the BinarySearch example" in {
+    testProgram("examples/", "BinarySearch.minijava",
+      "BinarySearch",
+      "3\n"
+    )
+  }*/
+
   private def writeClassFiles(visitor: CodeGenerationVisitor): Unit = {
     for ((classFileName, classWriter) <- visitor.getClassWriters()) {
       val fos = new FileOutputStream(f"$classFileName.class")

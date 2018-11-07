@@ -202,6 +202,14 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     a.visitInsn(Opcodes.IALOAD)
   }
 
+  override def visitArrayLengthExpression(arrayLengthExpression: ArrayLengthExpression, a: MethodVisitor): Unit = {
+    // Push the array to get the length of
+    visit(arrayLengthExpression.arrayExpression, a)
+
+    // Push the array length
+    a.visitInsn(Opcodes.ARRAYLENGTH)
+  }
+
   override def visitMethodCallExpression(methodCallExpression: MethodCallExpression, a: MethodVisitor): Unit = {
     // Push the object to call the method on
     visit(methodCallExpression.objectExpression, a)
