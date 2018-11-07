@@ -310,36 +310,20 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     classWriters.append((mainClassType.name, classWriter))
 
     // Create main class
+    val parentClass = mainClassType.getParentClass().getOrElse("java/lang/Object")
     classWriter.visit(
       49,
       Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER,
       mainClassType.name,
       null,
-      "java/lang/Object",
+      parentClass,
       null
     )
 
     classWriter.visitSource(fileName, null)
 
-    // Constructor
-    val constructorVisitor = classWriter.visitMethod(
-      Opcodes.ACC_PUBLIC,
-      "<init>",
-      "()V",
-      null,
-      null
-    )
-
-    constructorVisitor.visitVarInsn(Opcodes.ALOAD, 0)
-    constructorVisitor.visitMethodInsn(
-      Opcodes.INVOKESPECIAL,
-      "java/lang/Object",
-      "<init>",
-      "()V"
-    )
-    constructorVisitor.visitInsn(Opcodes.RETURN)
-    constructorVisitor.visitMaxs(1, 1)
-    constructorVisitor.visitEnd()
+    // Add class constructor
+    visitConstructor(classWriter, parentClass)
 
     // Main method
     visitMainMethod(classWriter, mainClassType.mainMethod)
@@ -367,10 +351,9 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   def visitClassType(fileName: String, classType: ClassType): Unit = {
     val classWriter = new ClassWriter(true)
 
-    val parentClass = classType.getParentClass().getOrElse("java/lang/Object")
-
     classWriters.append((classType.name, classWriter))
 
+    val parentClass = classType.getParentClass().getOrElse("java/lang/Object")
     classWriter.visit(
       49,
       Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER,
@@ -383,6 +366,22 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     classWriter.visitSource(fileName, null)
 
     // Add class constructor
+    visitConstructor(classWriter, parentClass)
+
+    // Add class instance variables
+    for (variable <- classType.variables) classWriter.visitField(
+      Opcodes.ACC_PUBLIC,
+      variable.name,
+      TypeDescription.convertType(variable.typeName),
+      null,
+      null
+    )
+
+    // Add class methods
+    for (method <- classType.methods) visitMethod(classWriter, method)
+  }
+
+  private def visitConstructor(classWriter: ClassWriter, parentClass: String): Unit = {
     val constructorVisitor = classWriter.visitMethod(
       Opcodes.ACC_PUBLIC,
       "<init>",
@@ -401,18 +400,6 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     constructorVisitor.visitInsn(Opcodes.RETURN)
     constructorVisitor.visitMaxs(1, 1)
     constructorVisitor.visitEnd()
-
-    // Add class instance variables
-    for (variable <- classType.variables) classWriter.visitField(
-      Opcodes.ACC_PUBLIC,
-      variable.name,
-      TypeDescription.convertType(variable.typeName),
-      null,
-      null
-    )
-
-    // Add class methods
-    for (method <- classType.methods) visitMethod(classWriter, method)
   }
 
   private def visitMethod(classWriter: ClassWriter, method: Method): Unit = {
