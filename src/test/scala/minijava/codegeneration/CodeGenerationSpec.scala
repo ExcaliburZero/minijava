@@ -394,12 +394,12 @@ class CodeGenerationSpec extends FlatSpec with Matchers {
     )
   }
 
-  /*it should "work on the BinarySearch example" in {
+  it should "work on the BinarySearch example" in {
     testProgram("examples/", "BinarySearch.minijava",
       "BinarySearch",
-      "3\n"
+      "20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n37\n38\n99999\n0\n0\n1\n1\n1\n1\n0\n0\n999\n"
     )
-  }*/
+  }
 
   private def writeClassFiles(visitor: CodeGenerationVisitor): Unit = {
     for ((classFileName, classWriter) <- visitor.getClassWriters()) {

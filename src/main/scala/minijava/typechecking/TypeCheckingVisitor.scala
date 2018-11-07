@@ -179,7 +179,18 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
   }
 
   override def visitArrayLengthExpression(arrayLengthExpression: ArrayLengthExpression, a: TypeVisitorContext): TypeDefinition = {
-    PrimitiveIntType
+    val arrayType = visit(arrayLengthExpression.arrayExpression, a)
+    val arrayExpected = PrimitiveIntArrayType
+    val resultingArrayType = TypeDefinition.conformsTo(arrayType, arrayExpected, a.typeTable) match {
+      case Some(t) => t
+      case None => failTypeCheck(arrayType, arrayExpected, a.typeTable, ???, "array length expression")
+    }
+
+    if (resultingArrayType == FailType) {
+      FailType
+    } else {
+      PrimitiveIntType
+    }
   }
 
   override def visitMethodCallExpression(methodCallExpression: MethodCallExpression, a: TypeVisitorContext): TypeDefinition = {
