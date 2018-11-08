@@ -312,6 +312,13 @@ class CodeGenerationSpec extends FunSpec with Matchers  {
           "2\n"
         )
       }
+
+      it("should allow a method with 8 parameters to be called") {
+        testProgram("examples/", "ManyParameters.minijava",
+          "ManyParameters",
+          "201600\n"
+        )
+      }
     }
   }
 

@@ -1,0 +1,17 @@
+class ManyParameters {
+    public static io void main(String[] a){
+        System.out.println(new A().run(1,2,3,4,5,6,7,8));
+    }
+}
+
+class A {
+    public int run(int a, int b, int c, int d, int e, int f, int g, int h) {
+        int ret_val;
+        if (a < 5) {
+            ret_val = this.run(a + 1, b, c, d, e, f, g, h);
+        } else {
+            ret_val = a * b * c * d * e * f * g * h;
+        }
+        return ret_val;
+    }
+}
