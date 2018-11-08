@@ -249,6 +249,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
         val index = getMethodVariableWithIndex(methodVariable, identifierExpression.name.name)._2
         val variableType = methodVariable.getTypeName(identifierExpression.name.name)
 
+        // Push the value stored in the variable
         a.visitIntInsn(getLoadInsn(variableType), index)
       case classType: ClassType =>
         val variableName = identifierExpression.name.name
@@ -335,6 +336,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   }
 
   private def visitMainMethod(classWriter: ClassWriter, mainMethod: Method): Unit = {
+    // Create the main method
     val methodVisitor = classWriter.visitMethod(
       Opcodes.ACC_PUBLIC + Opcodes.ACC_STATIC,
       mainMethod.name,
@@ -343,9 +345,13 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       NO_EXCEPTIONS
     )
 
+    // Double check that there is only one parameter, as a sanity check
     assert(mainMethod.statements.length == 1)
+
+    // Add the bytecode for the statement
     visit(mainMethod.statements.head, methodVisitor)
 
+    // Return and end the method
     methodVisitor.visitInsn(Opcodes.RETURN)
 
     methodVisitor.visitMaxs(2, 1) // TODO: do this better? Maybe have each visit return a max stack?
@@ -358,6 +364,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
 
     classWriters.append((classType.name, classWriter))
 
+    // Create the class
     val parentClass = classType.getParentClass().getOrElse("java/lang/Object")
     classWriter.visit(
       49,
@@ -387,6 +394,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   }
 
   private def visitConstructor(classWriter: ClassWriter, parentClass: String): Unit = {
+    // Create the constructor method
     val constructorVisitor = classWriter.visitMethod(
       Opcodes.ACC_PUBLIC,
       "<init>",
@@ -395,6 +403,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       NO_EXCEPTIONS
     )
 
+    // Load the "this" object and call the parent constructor
     constructorVisitor.visitVarInsn(Opcodes.ALOAD, 0)
     constructorVisitor.visitMethodInsn(
       Opcodes.INVOKESPECIAL,
@@ -402,6 +411,8 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       "<init>",
       "()V"
     )
+
+    // Return and end the method
     constructorVisitor.visitInsn(Opcodes.RETURN)
     constructorVisitor.visitMaxs(1, 1)
     constructorVisitor.visitEnd()
@@ -423,15 +434,11 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
 
     // Add the local variables
     for ((local, index) <- method.localVariables.zipWithIndex) {
+      val typeDescriptor = TypeDescription.convertType(local.typeName)
+
       methodVisitor.visitLocalVariable(
         local.name,
-        local.typeName match {
-          case "int" => "I"
-          case "boolean" => "Z"
-          case "void" => ???
-          case "int[]" => "[I"
-          case className => f"L$className;"
-        },
+        typeDescriptor,
         NO_GENERICS,
         methodStartLabel,
         methodEndLabel,
