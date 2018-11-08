@@ -9,6 +9,12 @@ import scala.collection.mutable.ArrayBuffer
 class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   private val INT_TYPE = 10
 
+  private val NO_DEBUG_INFO: String = null
+  private val NO_GENERICS: String = null
+  private val NO_INTERFACES: Array[String] = null
+  private val NO_INITIAL_VALUE: Object = null
+  private val NO_EXCEPTIONS: Array[String] = null
+
   private val classWriters = new ArrayBuffer[(String, ClassWriter)]()
 
   def getClassWriters(): List[(String, ClassWriter)] = {
@@ -187,7 +193,6 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
         visit(binaryOperationExpression.firstExpression, a)
         visit(binaryOperationExpression.secondExpression, a)
         a.visitInsn(Opcodes.IOR)  // Bitwise or is equivalent to and for true=0 and false=1
-      case _ => ???
     }
   }
 
@@ -315,12 +320,12 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       49,
       Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER,
       mainClassType.name,
-      null,
+      NO_GENERICS,
       parentClass,
-      null
+      NO_INTERFACES
     )
 
-    classWriter.visitSource(fileName, null)
+    classWriter.visitSource(fileName, NO_DEBUG_INFO)
 
     // Add class constructor
     visitConstructor(classWriter, parentClass)
@@ -334,8 +339,8 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       Opcodes.ACC_PUBLIC + Opcodes.ACC_STATIC,
       mainMethod.name,
       "([Ljava/lang/String;)V",
-      null,
-      null
+      NO_GENERICS,
+      NO_EXCEPTIONS
     )
 
     assert(mainMethod.statements.length == 1)
@@ -358,12 +363,12 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       49,
       Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER,
       classType.name,
-      null,
+      NO_GENERICS,
       parentClass,
-      null
+      NO_INTERFACES
     )
 
-    classWriter.visitSource(fileName, null)
+    classWriter.visitSource(fileName, NO_DEBUG_INFO)
 
     // Add class constructor
     visitConstructor(classWriter, parentClass)
@@ -373,8 +378,8 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       Opcodes.ACC_PUBLIC,
       variable.name,
       TypeDescription.convertType(variable.typeName),
-      null,
-      null
+      NO_GENERICS,
+      NO_INITIAL_VALUE
     )
 
     // Add class methods
@@ -386,8 +391,8 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       Opcodes.ACC_PUBLIC,
       "<init>",
       "()V",
-      null,
-      null
+      NO_GENERICS,
+      NO_EXCEPTIONS
     )
 
     constructorVisitor.visitVarInsn(Opcodes.ALOAD, 0)
@@ -408,8 +413,8 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       Opcodes.ACC_PUBLIC,
       method.name,
       method.getSignature(),
-      null,
-      null
+      NO_GENERICS,
+      NO_EXCEPTIONS
     )
 
     // Create labels to mark the beginning and end of the method in order to mark the scope of the local variables
@@ -427,7 +432,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
           case "int[]" => "[I"
           case className => f"L$className;"
         },
-        null,
+        NO_GENERICS,
         methodStartLabel,
         methodEndLabel,
         index + method.parameters.length + 1
