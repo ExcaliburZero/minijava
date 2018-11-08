@@ -266,6 +266,13 @@ class CodeGenerationSpec extends FunSpec with Matchers  {
           "8\n"
         )
       }
+
+      it("should allow an int array to be created with a runtime-determined length") {
+        testProgram("examples/", "IntArrayRuntimeLength.minijava",
+          "IntArrayRuntimeLength",
+          "20\n"
+        )
+      }
     }
 
     describe("method overriding") {
