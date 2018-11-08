@@ -272,7 +272,14 @@ class CodeGenerationSpec extends FunSpec with Matchers  {
       it("should call the correct method on a child class") {
         testProgram("examples/", "Override.minijava",
           "Override",
-          "1\n2\n"
+          "1\n2\n0\n"
+        )
+      }
+
+      it("should call the correct method on a child class in an inheritance chain") {
+        testProgram("examples/", "MultipleOverride.minijava",
+          "MultipleOverride",
+          "1\n2\n3\n0\n"
         )
       }
     }

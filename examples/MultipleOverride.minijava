@@ -1,19 +1,21 @@
-class Override {
+class MultipleOverride {
     public static io void main(String[] a){
         System.out.println(new Runner().run());
     }
 }
-
 class Runner {
     public int run() {
         A a;
         A b;
+        A c;
 
         a = new A();
         b = new B();
+        c = new C();
 
         System.out.println(a.go());
         System.out.println(b.go());
+        System.out.println(c.go());
 
         return 0;
     }
@@ -28,5 +30,11 @@ class A {
 class B extends A {
     public int go() {
         return 2;
+    }
+}
+
+class C extends B {
+    public int go() {
+        return 3;
     }
 }
