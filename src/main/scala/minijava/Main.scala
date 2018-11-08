@@ -1,13 +1,15 @@
 package minijava
 
+import java.io.FileOutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 
+import minijava.codegeneration.CodeGenerationVisitor
 import org.antlr.v4.runtime._
 import minijava.grammar._
 import minijava.messages.{CompilerError, CompilerMessage, CompilerWarning}
 import minijava.parser.{MiniJavaVisitorImpl, ParseErrorListener}
-import minijava.typechecking.{TypeChecking, TypeTable}
+import minijava.typechecking.{ClassType, MainClassType, TypeChecking, TypeTable}
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -18,7 +20,10 @@ object Main {
     }
 
     val filepath = args.head
+    compile(filepath)
+  }
 
+  def compile(filepath: String): Unit = {
     val input = readFile(filepath)
 
     val ast = (parseString(input) match {
@@ -28,8 +33,6 @@ object Main {
         System.exit(1)
     }).asInstanceOf[Goal]
 
-    //checkASTAndPrettied(ast, input)
-
     val typeTable = (TypeChecking.typeCheck(ast) match {
       case Right(t) => t
       case Left(errors) =>
@@ -37,7 +40,11 @@ object Main {
         System.exit(1)
     }).asInstanceOf[TypeTable]
 
-    println(typeTable)
+    val mainClassName = ast.mainClass.name.name
+
+    generateCode(typeTable, mainClassName, filepath)
+
+    printLogo()
   }
 
   def parseString(input: String): Either[List[CompilerMessage], Goal] = {
@@ -71,6 +78,35 @@ object Main {
     new String(Files.readAllBytes(Paths.get(filepath)), StandardCharsets.UTF_8)
   }
 
+  def generateCode(typeTable: TypeTable, mainClassName: String, filepath: String): Unit = {
+    val visitor = new CodeGenerationVisitor()
+
+    val mainClassType = typeTable.get(mainClassName).get.asInstanceOf[MainClassType]
+    visitor.visitMainClassType(filepath, mainClassType)
+
+    typeTable.types()
+      .filter(_.isInstanceOf[ClassType])
+      .map(_.asInstanceOf[ClassType])
+      .foreach(visitor.visitClassType(filepath, _))
+
+    writeClassFiles(visitor)
+  }
+
+  private def writeClassFiles(visitor: CodeGenerationVisitor): Unit = {
+    for ((classFileName, classWriter) <- visitor.getClassWriters()) {
+      val fos = new FileOutputStream(f"$classFileName.class")
+      try {
+        fos.write(classWriter.toByteArray)
+      }
+      finally if (fos != null) fos.close()
+    }
+  }
+
+  /**
+    * Prints out the given list of CompilerMessages.
+    *
+    * @param errors The CompilerMessages to print.
+    */
   def printErrors(errors: List[CompilerMessage]): Unit = {
     errors.foreach(e => println(e.toDisplayString()))
 
@@ -83,62 +119,40 @@ object Main {
     println(errorsMsg + warningsMsg)
   }
 
-  /*def checkASTAndPrettied(ast: Goal, input: String): Unit = {
-    /*println("----------------")
-    println("|   Original   |")
-    println("----------------")
-    println(input)
-    println("----------------")
-    println("|     AST      |")
-    println("----------------")
-    println(ast)
-    println("----------------")
-    println("|    Pretty    |")
-    println("----------------")*/
+  private def printLogo(): Unit = {
+    println(
+      """
 
-    val prettied = AST.prettyPrint(ast)
-    /*println(prettied)
+           ;k'        ,,
+          ok        '0:
+         ,0        ,0.
+         ol        O,
+         ;0        k:
+          kl       'K.
+           0:       :0
+           .X.       Oc
+            :O       .K,
+             N        'N
+            .X        .M.
+           .K,        xd
+          ck.       ;d'
 
-    println("----------------")
-    println("|   Re-Pretty  |")
-    println("----------------")*/
+                    ..          .x  .:olll;
+  ,k             ,dd;;dx.       .K.xo.    'K'
+  lo oxclk,   .cx:      lxl',dd..WO.       K,
+  ll      :oloc.          .,'   ok        ok
+  ll                '           K;    ,ldx;
+  ;k          'o  .k:O         .N  ,dd,.
+  .X         .Ooc 0. :o        dxlk,
+   dd        O..Ox,   x,      .WK,
+    0:      ll  d:     K      kk
+    .K'    .K          o;    xx
+     .K'                    lk
+       xd.                .dx
+        .oxc            :xo.
+           .;lllllclllol'
 
-    val prettiedAst = (parseString(prettied) match {
-      case Right(a) => a
-      case Left(errors) =>
-        printErrors(errors)
-        System.exit(1)
-    }).asInstanceOf[Goal]
-    val doublePrettied = AST.prettyPrint(prettiedAst)
-    /*println(doublePrettied)
-
-    println("----------------")*/
-
-    val compareASTs = ast.equals(prettiedAst)
-    println("AST from prettied same as non-prettied:                     \t%s".format(compareASTs))
-
-    val comparePrettied = prettied.equals(doublePrettied)
-    println("Prettied same as double prettied:                           \t%s".format(comparePrettied))
-
-    val originalNoSpacesOrComments = input
-      .split("\n")
-      .map(l => l.split("//").head) // Remove comments
-      .mkString("")
-      .replaceAll("\\s", "")    // Remove whitespace
-    val prettiedNoSpaces = prettied.replaceAll("\\s", "")
-
-    val compareNoSpaces = prettiedNoSpaces.equals(originalNoSpacesOrComments)
-    println("Prettied same as original, ignoring whitespace + comments:  \t%s".format(compareNoSpaces))
-
-    if (!compareNoSpaces) {
-      println("diff:")
-      println("\"%s\"".format(originalNoSpacesOrComments.diff(prettiedNoSpaces)))
-      println("diff (op):")
-      println("\"%s\"".format(prettiedNoSpaces.diff(originalNoSpacesOrComments)))
-    }
-
-    assert(compareASTs)
-    assert(comparePrettied)
-    assert(compareNoSpaces)
-  }*/
+      """
+    )
+  }
 }
