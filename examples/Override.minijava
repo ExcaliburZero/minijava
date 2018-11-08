@@ -1,0 +1,20 @@
+class Override {
+    public static io void main(String[] a){
+        {
+            System.out.println(new A().go());
+            System.out.println(new B().go());
+        }
+    }
+}
+
+class A {
+    public int go() {
+        return 1;
+    }
+}
+
+class B {
+    public int go() {
+        return 2;
+    }
+}

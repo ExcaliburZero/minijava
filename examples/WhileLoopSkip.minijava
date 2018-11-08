@@ -1,0 +1,18 @@
+class WhileLoopSkip {
+    public static io void main(String[] a){
+        System.out.println(new Loop().go(0));
+    }
+}
+
+class Loop {
+
+    public int go(int num){
+        int num_aux;
+        num_aux = 0;
+        while (num_aux < num) {
+            num_aux = num_aux + 1;
+        }
+        return num_aux;
+    }
+
+}

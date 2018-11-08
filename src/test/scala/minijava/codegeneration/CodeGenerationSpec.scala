@@ -268,6 +268,15 @@ class CodeGenerationSpec extends FunSpec with Matchers  {
       }
     }
 
+    describe("method overriding") {
+      it("should call the correct method on a child class") {
+        testProgram("examples/", "Override.minijava",
+          "Override",
+          "1\n2\n"
+        )
+      }
+    }
+
     describe("miscellaneous") {
       it("should allow method calls") {
         testProgram("examples/", "MethodCall.minijava",
@@ -280,6 +289,13 @@ class CodeGenerationSpec extends FunSpec with Matchers  {
         testProgram("examples/", "WhileLoop.minijava",
           "WhileLoop",
           "5\n"
+        )
+      }
+
+      it("should allow while loops that are skipped") {
+        testProgram("examples/", "WhileLoopSkip.minijava",
+          "WhileLoopSkip",
+          "0\n"
         )
       }
 
