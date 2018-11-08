@@ -24,4 +24,37 @@ class CompilerMessagesSpec extends FlatSpec with Matchers {
 
     output shouldBe expected
   }
+
+  it should "should properly display a TypeChecking error" in {
+    val message = CompilerMessage(CompilerError, TypeCheckingError, Some(LineColumn(2, 4)), "Incompatible types in negated expression.\nExpected:  boolean\nFound:     int")
+
+    val output = message.toDisplayString()
+    val expected = "%s[type checking] %s%s[error] %sln:2 col:4 - Incompatible types in negated expression.\nExpected:  boolean\nFound:     int".format(
+      Console.BLUE, Console.RESET, Console.RED, Console.RESET
+    )
+
+    output shouldBe expected
+  }
+
+  it should "should properly display an error with just a line number" in {
+    val message = CompilerMessage(CompilerError, TypeCheckingError, Some(LineNumber(5)), "Incompatible types in negated expression.\nExpected:  boolean\nFound:     int")
+
+    val output = message.toDisplayString()
+    val expected = "%s[type checking] %s%s[error] %sln:5 - Incompatible types in negated expression.\nExpected:  boolean\nFound:     int".format(
+      Console.BLUE, Console.RESET, Console.RED, Console.RESET
+    )
+
+    output shouldBe expected
+  }
+
+  it should "should properly display an error with no location information" in {
+    val message = CompilerMessage(CompilerError, TypeCheckingError, None, "Incompatible types in negated expression.\nExpected:  boolean\nFound:     int")
+
+    val output = message.toDisplayString()
+    val expected = "%s[type checking] %s%s[error] %s- Incompatible types in negated expression.\nExpected:  boolean\nFound:     int".format(
+      Console.BLUE, Console.RESET, Console.RED, Console.RESET
+    )
+
+    output shouldBe expected
+  }
 }
