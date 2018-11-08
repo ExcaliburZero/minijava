@@ -177,7 +177,10 @@ object TypeChecking {
       case _: MainClassType =>
       case _ =>
         visitor.checkReturnType(
-          typeTable.get(method.returnType).get, // TODO: Fix this failing if the return type is a class that is not defined
+          typeTable.get(method.returnType) match {
+            case Some(c) => c
+            case None => FailType
+          },
           method.returnExpression.get,
           context
         )

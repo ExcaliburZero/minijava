@@ -868,4 +868,24 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
 
     errors shouldBe expected
   }
+
+  it should "fail when a method returns an unknown type" in {
+    val input = Main.readFile("examples/ReturnUnkownType.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, Some(LineColumn(9, 15)), "Instantiation of unknown class \"B\".")
+    )
+
+    errors shouldBe expected
+  }
 }

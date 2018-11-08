@@ -1,0 +1,11 @@
+class ReturnUnknownType {
+    public static io void main(String[] a){
+        System.out.println(5);
+    }
+}
+
+class A {
+    public B hi() {
+        return new B();
+    }
+}
