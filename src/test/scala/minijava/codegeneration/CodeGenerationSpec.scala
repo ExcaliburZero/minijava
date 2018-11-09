@@ -289,6 +289,20 @@ class CodeGenerationSpec extends FunSpec with Matchers  {
           "1\n2\n3\n0\n"
         )
       }
+
+      it("should call the correct method in a case of covariant override") {
+        testProgram("examples/", "CovariantOverride.minijava",
+          "Factorial",
+          "1\n2\n"
+        )
+      }
+
+      it("should call the correct method in a case of covariant override followed by a polymorhpic call") {
+        testProgram("examples/", "CovariantPolymorphic.minijava",
+          "CovariantPolymorphic",
+          "1\n2\n3\n"
+        )
+      }
     }
 
     describe("miscellaneous") {

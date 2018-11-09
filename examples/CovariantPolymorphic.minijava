@@ -1,0 +1,44 @@
+class CovariantPolymorphic {
+    public static io void main(String[] a){
+        System.out.println(new Runner().run());
+    }
+}
+
+class Runner {
+    public int run() {
+        A fac;
+        A a;
+
+        fac = new Fac().greet();
+        a = new A().greet();
+
+        System.out.println(fac.ComputeFac(10));
+        System.out.println(a.ComputeFac(10));
+
+        return 3;
+    }
+}
+
+class Fac extends A {
+
+    public int ComputeFac(int num){
+        return 1 ;
+    }
+
+    public Fac greet() {
+        return this;
+    }
+
+}
+
+class A {
+
+    public int ComputeFac(int num){
+        return 2 ;
+    }
+
+    public A greet() {
+        return new A();
+    }
+
+}

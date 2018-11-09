@@ -1,18 +1,16 @@
 class Factorial{
     public static io void main(String[] a){
-        System.out.println(new Fac().ComputeFac(10));
+        {
+            System.out.println(new Fac().greet().ComputeFac(10));
+            System.out.println(new A().greet().ComputeFac(10));
+        }
     }
 }
 
 class Fac extends A {
 
     public int ComputeFac(int num){
-        int num_aux ;
-        if (num < 1)
-            num_aux = 1 ;
-        else 
-            num_aux = num * (this.ComputeFac(num-1)) ;
-        return num_aux ;
+        return 1 ;
     }
 
     public Fac greet() {
@@ -22,6 +20,10 @@ class Fac extends A {
 }
 
 class A {
+
+    public int ComputeFac(int num){
+        return 2 ;
+    }
 
     public A greet() {
         return new A();
