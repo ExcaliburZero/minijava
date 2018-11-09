@@ -141,12 +141,12 @@ object Main {
   ,k             ,dd;;dx.       .K.xo.    'K'
   lo oxclk,   .cx:      lxl',dd..WO.       K,
   ll      :oloc.          .,'   ok        ok
-  ll                '           K;    ,ldx;
-  ;k          'o  .k:O         .N  ,dd,.
-  .X         .Ooc 0. :o        dxlk,
-   dd        O..Ox,   x,      .WK,
-    0:      ll  d:     K      kk
-    .K'    .K          o;    xx
+  ll                            K;    ,ldx;
+  ;k                           .N  ,dd,.
+  .X          /\ /\            dxlk,
+   dd        /  V  \          .WK,
+    0:      /       \ ini     kk
+    .K'                      xx
      .K'                    lk
        xd.                .dx
         .oxc            :xo.
