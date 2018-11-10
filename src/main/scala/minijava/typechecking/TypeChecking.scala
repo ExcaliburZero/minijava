@@ -1,7 +1,7 @@
 package minijava.typechecking
 
-import minijava.grammar.Goal
-import minijava.messages.{CompilerError, CompilerMessage, TypeCheckingError}
+import minijava.grammar.{Goal, MethodCallExpression, PrintStatement}
+import minijava.messages._
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -31,6 +31,12 @@ object TypeChecking {
 
     if (typeCheckingErrors.nonEmpty) {
       return Left(typeCheckingErrors)
+    }
+
+    val ioCheckingErrors = visitingIOCheck(typeTable)
+
+    if (ioCheckingErrors.nonEmpty) {
+      return Left(ioCheckingErrors)
     }
 
     Right(typeTable)
@@ -219,6 +225,40 @@ object TypeChecking {
     errors.toList
   }
 
+  private def ioCheckMethod(typeTable: TypeTable, classType: ClassLikeType, method: Method, errors: ArrayBuffer[CompilerMessage]): Unit = {
+    val shouldBeIO = method.isIO
+
+    val visitor = new IOCheckingVisitor()
+
+    method.statements.foreach(visitor.visit(_, ()))
+    val ioInstances = visitor.getIOInstances()
+
+    (shouldBeIO, ioInstances.nonEmpty) match {
+      case (true, true) => ()
+      case (false, false) => ()
+      case (true, false) => warnUnnecessaryIOMark(classType, method, errors)
+      case (false, true) => failUnmarkedIO(classType, method, ioInstances, errors)
+    }
+  }
+
+  private def visitingIOCheck(typeTable: TypeTable): List[CompilerMessage] = {
+    val errors = new ArrayBuffer[CompilerMessage]()
+
+    for (t <- typeTable.types()) {
+      t match {
+        case classType: ClassType =>
+          for (m <- classType.methods) {
+            ioCheckMethod(typeTable, classType, m, errors)
+          }
+        case mainClassType: MainClassType =>
+          ioCheckMethod(typeTable, mainClassType, mainClassType.mainMethod, errors)
+        case _ =>
+      }
+    }
+
+    errors.toList
+  }
+
   private def failUnknownVariableType(variable: Variable, context: String, method: Method, classLikeType: ClassLikeType, errors: ArrayBuffer[CompilerMessage]): Unit = {
     val message = "Unknown type \"%s\" for %s \"%s\" in method \"%s\" of class \"%s\"."
       .format(variable.typeName, context, variable.name, method.name, classLikeType.getName())
@@ -233,6 +273,42 @@ object TypeChecking {
       .format(variable.typeName, variable.name, classLikeType.getName())
 
     val err = CompilerMessage(CompilerError, TypeCheckingError, None, message)
+
+    errors.append(err)
+  }
+
+  private def failUnmarkedIO(classLikeType: ClassLikeType, method: Method, ioInstances: List[IOInstance], errors: ArrayBuffer[CompilerMessage]): Unit = {
+    val messageStart = "IO present in non-io method \"%s\" of class \"%s\"."
+      .format(method.name, classLikeType.getName())
+
+    val messageEnd = "\n\n" + ioInstances.map(ioInst => {
+      val loc = ioInst.location match {
+        case LineNumber(l) => "ln:%s\t".format(l)
+        case LineColumn(l, c) => "ln:%s col:%s\t".format(l, c)
+      }
+
+      val nodeType = ioInst.node match {
+        case _: PrintStatement => "Print statement"
+        case methodCallExp: MethodCallExpression => "Call of io method \"%s\""
+            .format(methodCallExp.methodName.name)
+        case _ => ???
+      }
+
+      loc + nodeType
+    }).mkString("\n")
+
+    val message = messageStart + messageEnd
+
+    val err = CompilerMessage(CompilerError, TypeCheckingError, None, message)
+
+    errors.append(err)
+  }
+
+  private def warnUnnecessaryIOMark(classType: ClassLikeType, method: Method, errors: ArrayBuffer[CompilerMessage]): Unit = {
+    val message = "Method \"%s\" of class \"%s\" is marked as io, but does not perform any io."
+      .format(method.name, classType.getName())
+
+    val err = CompilerMessage(CompilerWarning, TypeCheckingError, None, message)
 
     errors.append(err)
   }

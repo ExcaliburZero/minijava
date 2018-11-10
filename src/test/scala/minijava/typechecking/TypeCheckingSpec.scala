@@ -888,4 +888,24 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
 
     errors shouldBe expected
   }
+
+  it should "fail when a main method that has a print statement is not io" in {
+    val input = Main.readFile("examples/MainPrintNotIO.minijava")
+
+    val ast = Main.parseString(input)
+
+    ast.isRight shouldBe true
+
+    val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
+
+    typeCheckResult.isLeft shouldBe true
+
+    val errors = typeCheckResult.left.get
+
+    val expected = List(
+      CompilerMessage(CompilerError, TypeCheckingError, None, "IO present in non-io method \"main\" of class \"MainPrintNotIO\".\n\nln:3\tPrint statement")
+    )
+
+    errors shouldBe expected
+  }
 }

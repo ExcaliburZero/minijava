@@ -294,7 +294,7 @@ class Tree{
         return ifound ;
     }
 
-    public boolean Print(){
+    public io boolean Print(){
         boolean ntb ;
         Tree current_node ;
 
@@ -332,7 +332,7 @@ class Visitor {
     Tree l ;
     Tree r ;
 
-    public int visit(Tree n){
+    public io int visit(Tree n){
         int nti ;
 
         if (n.GetHas_Right()){

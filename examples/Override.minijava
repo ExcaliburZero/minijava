@@ -5,7 +5,7 @@ class Override {
 }
 
 class Runner {
-    public int run() {
+    public io int run() {
         A a;
         A b;
 

@@ -5,7 +5,7 @@ class CovariantPolymorphic {
 }
 
 class Runner {
-    public int run() {
+    public io int run() {
         A fac;
         A a;
 
