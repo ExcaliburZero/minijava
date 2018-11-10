@@ -406,6 +406,15 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     )
   }
 
+  it should "give a warning when a main method is marked io, but contains no io" in {
+    expectTypeCheckErrors(
+      "examples/UnneccessaryIOMain.minijava",
+      List(
+        CompilerMessage(CompilerWarning, TypeCheckingError, None, "Method \"main\" of class \"UnneccessaryIOMain\" is marked as io, but does not perform any io.")
+      )
+    )
+  }
+
   private def expectPassWithClasses(inputFile: String, expectedClasses: List[String]): Unit = {
     val input = Main.readFile(inputFile)
 
