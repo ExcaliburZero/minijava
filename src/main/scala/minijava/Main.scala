@@ -30,14 +30,22 @@ object Main {
       case Right(a) => a
       case Left(errors) =>
         printErrors(errors)
-        System.exit(1)
+
+        if (errors.exists(_.kind == CompilerError)) {
+          System.exit(1)
+        }
     }).asInstanceOf[Goal]
 
     val typeTable = (TypeChecking.typeCheck(ast) match {
-      case Right(t) => t
-      case Left(errors) =>
+      case (Some(t), None) => t
+      case (t, Some(errors)) =>
         printErrors(errors)
-        System.exit(1)
+
+        if (errors.exists(_.kind == CompilerError)) {
+          System.exit(1)
+        } else {
+          t.get
+        }
     }).asInstanceOf[TypeTable]
 
     val mainClassName = ast.mainClass.name.name

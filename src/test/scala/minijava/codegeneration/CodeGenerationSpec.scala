@@ -362,9 +362,9 @@ class CodeGenerationSpec extends FunSpec with Matchers  {
 
     val typeCheckResult = TypeChecking.typeCheck(ast.right.get)
 
-    typeCheckResult.isRight shouldBe true
+    typeCheckResult._2.isEmpty shouldBe true
 
-    val typeTable = typeCheckResult.right.get
+    val typeTable = typeCheckResult._1.get
 
     val visitor = new CodeGenerationVisitor()
 

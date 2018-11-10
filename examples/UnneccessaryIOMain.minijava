@@ -1,0 +1,5 @@
+class UnneccessaryIOMain {
+    public static io void main(String[] a){
+        {}
+    }
+}

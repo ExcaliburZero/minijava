@@ -6,11 +6,11 @@ import minijava.messages._
 import scala.collection.mutable.ArrayBuffer
 
 object TypeChecking {
-  def typeCheck(ast: Goal): Either[List[CompilerMessage], TypeTable] = {
+  def typeCheck(ast: Goal): (Option[TypeTable], Option[List[CompilerMessage]]) = {
     val (typeTable, duplicateTypeErrors) = extractTypeTable(ast)
 
     if (duplicateTypeErrors.nonEmpty) {
-      return Left(duplicateTypeErrors)
+      return (None, Some(duplicateTypeErrors))
     }
 
     val unknownTypeErrors = checkForUnknownTypes(typeTable)
@@ -18,28 +18,28 @@ object TypeChecking {
 
     val stage2Errors = unknownTypeErrors ++ duplicateMethodErrors
     if (stage2Errors.nonEmpty) {
-      return Left(stage2Errors)
+      return (None, Some(stage2Errors))
     }
 
     val overloadingErrors = validateMethodOverloading(typeTable)
 
     if (overloadingErrors.nonEmpty) {
-      return Left(overloadingErrors)
+      return (None, Some(overloadingErrors))
     }
 
     val typeCheckingErrors = visitingTypeCheck(typeTable)
 
     if (typeCheckingErrors.nonEmpty) {
-      return Left(typeCheckingErrors)
+      return (Some(typeTable), Some(typeCheckingErrors))
     }
 
     val ioCheckingErrors = visitingIOCheck(typeTable)
 
     if (ioCheckingErrors.nonEmpty) {
-      return Left(ioCheckingErrors)
+      return (Some(typeTable), Some(ioCheckingErrors))
     }
 
-    Right(typeTable)
+    (Some(typeTable), None)
   }
 
   private def extractTypeTable(ast: Goal): (TypeTable, List[CompilerMessage]) = {
