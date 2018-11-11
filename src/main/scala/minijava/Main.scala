@@ -75,8 +75,10 @@ object Main {
 
     val goal = visitor.visit(parser.goal).asInstanceOf[Option[Goal]]
 
-    if (listener.getErrors().nonEmpty) {
-      Left(listener.getErrors())
+    if (listener.getErrors().nonEmpty || visitor.getASTErrors().nonEmpty) {
+      Left(
+        listener.getErrors() ++ visitor.getASTErrors()
+      )
     } else {
       Right(goal.get)
     }

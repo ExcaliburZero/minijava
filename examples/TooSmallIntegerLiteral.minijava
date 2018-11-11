@@ -1,0 +1,5 @@
+class TooLargeIntegerLiteral {
+    public static io void main(String[] a){
+        System.out.println(-9999999999999999999);
+    }
+}

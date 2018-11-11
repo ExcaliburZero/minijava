@@ -1,12 +1,21 @@
 package minijava.parser
 
 import minijava.grammar._
+import minijava.messages._
 import org.antlr.v4.runtime.tree.TerminalNode
 import scalaz.std.list._
 import scalaz.std.option._
 import scalaz.syntax.traverse._
 
+import scala.collection.mutable.ArrayBuffer
+
 class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
+  private val astErrors = new ArrayBuffer[CompilerMessage]()
+
+  def getASTErrors(): List[CompilerMessage] = {
+    astErrors.toList
+  }
+
   override def visitGoal(ctx: MiniJavaParser.GoalContext): Option[ASTNode] = {
     for (
       mainClRaw <- Option(ctx.mainClass());
@@ -242,13 +251,49 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
   override def visitNegatedIntegerLiteral(ctx: MiniJavaParser.NegatedIntegerLiteralContext): Option[ASTNode] = {
     for (
       i <- Option(ctx.INTEGER_LITERAL())
-    ) yield IntegerLiteral(Integer.parseInt("-" + i.getSymbol.getText))
+    ) yield {
+      try {
+        IntegerLiteral(Integer.parseInt("-" + i.getSymbol.getText))
+      } catch {
+        case e: NumberFormatException =>
+          val message = "Invalid negative integer literal \"%s\", perhaps it is too small.".format("-" + i.getSymbol.getText)
+
+          val location = LineColumn(
+            ctx.start.getLine,
+            ctx.start.getCharPositionInLine
+          )
+
+          astErrors.append(
+            CompilerMessage(CompilerError, ParsingError, Some(location), message)
+          )
+
+          return None
+      }
+    }
   }
 
   override def visitIntegerLiteral(ctx: MiniJavaParser.IntegerLiteralContext): Option[ASTNode] = {
     for (
       i <- Option(ctx.INTEGER_LITERAL())
-    ) yield IntegerLiteral(Integer.parseInt(i.getSymbol.getText))
+    ) yield {
+      try {
+        IntegerLiteral(Integer.parseInt(i.getSymbol.getText))
+      } catch {
+        case e: NumberFormatException =>
+          val message = "Invalid integer literal \"%s\", perhaps it is too large.".format(i.getSymbol.getText)
+
+          val location = LineColumn(
+            ctx.start.getLine,
+            ctx.start.getCharPositionInLine
+          )
+
+          astErrors.append(
+            CompilerMessage(CompilerError, ParsingError, Some(location), message)
+          )
+
+          return None
+      }
+    }
   }
 
   override def visitTrue(ctx: MiniJavaParser.TrueContext): Option[ASTNode] = {
