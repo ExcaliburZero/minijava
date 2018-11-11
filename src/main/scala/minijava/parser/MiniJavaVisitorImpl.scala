@@ -191,8 +191,8 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
     for (
       fstExpRaw <- Option(ctx.expression(0));
       fstExp <- fstExpRaw.accept(this).asInstanceOf[Option[Expression]];
-      opRaw <- Option(ctx.BINARY_OPERATOR());
-      op = opRaw.getSymbol.getText match {
+      opRaw <- Option(ctx.binary_operator);
+      op = opRaw.getText match {
         case "&&" => And
         case "<" => LessThan
         case "+" => Plus
@@ -237,6 +237,12 @@ class MiniJavaVisitorImpl extends MiniJavaBaseVisitor[Option[ASTNode]] {
       lineNumber <- Option(ctx.start.getLine);
       columnNumber <- Option(ctx.start.getCharPositionInLine)
     ) yield MethodCallExpression(objExp, methodName, params, lineNumber, columnNumber)
+  }
+
+  override def visitNegatedIntegerLiteral(ctx: MiniJavaParser.NegatedIntegerLiteralContext): Option[ASTNode] = {
+    for (
+      i <- Option(ctx.INTEGER_LITERAL())
+    ) yield IntegerLiteral(Integer.parseInt("-" + i.getSymbol.getText))
   }
 
   override def visitIntegerLiteral(ctx: MiniJavaParser.IntegerLiteralContext): Option[ASTNode] = {

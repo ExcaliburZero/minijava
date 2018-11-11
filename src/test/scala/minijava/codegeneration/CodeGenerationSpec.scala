@@ -99,6 +99,13 @@ class CodeGenerationSpec extends FunSpec with Matchers  {
           "6\n"
         )
       }
+
+      it("should allow negative integer literals") {
+        testProgram("examples/", "PrintNegativeInteger.minijava",
+          "PrintNegativeInteger",
+          "-1\n"
+        )
+      }
     }
 
     describe("if statements") {

@@ -27,10 +27,11 @@ statement :
     ;
 
 expression :
-      expression BINARY_OPERATOR expression # BinaryOperationExpression
+      expression binary_operator=('&&' | '<' | '+' | '-' | '*') expression # BinaryOperationExpression
     | expression '[' expression ']' # ArrayAccessExpression
     | expression '.' 'length' # ArrayLengthExpression
     | objectExpression=expression '.' IDENTIFIER'(' (expression ( ',' expression )*)? ')' # MethodCallExpression
+    | '-' INTEGER_LITERAL # NegatedIntegerLiteral
     | INTEGER_LITERAL # IntegerLiteral
     | 'true' # True
     | 'false' # False
@@ -38,21 +39,12 @@ expression :
     | 'this' # This
     | 'new' 'int' '[' expression ']' # NewIntArrayExpression
     | 'new' IDENTIFIER '(' ')' # NewObjectExpression
-    | NOT expression # NegationExpression
+    | '!' expression # NegationExpression
     | '(' expression ')' # ParenedExpression
     ;
 
 IDENTIFIER : [a-zA-Z_]+[a-zA-Z_0-9]* ;
 INTEGER_LITERAL : [0-9]+ ;
-
-BINARY_OPERATOR : AND | LT | PLUS | MINUS | TIMES ;
-
-AND : '&&' ;
-LT : '<' ;
-PLUS : '+' ;
-MINUS : '-' ;
-TIMES : '*' ;
-NOT : '!';
 
 WS: [ \n\t\r]+ -> skip;
 COMMENT : '//' .+? ('\n'|EOF) -> skip ;
