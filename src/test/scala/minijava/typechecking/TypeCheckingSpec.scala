@@ -451,6 +451,29 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     )
   }
 
+  it should "pass when a class overrides an io method as non-io" in {
+    expectPassWithClasses(
+      "examples/OverrideIOWithNonIO.minijava",
+      List("OverrideIOWithNonIO", "A", "B")
+    )
+  }
+
+  it should "fail when a class overrides a non-io method as io" in {
+    expectTypeCheckErrors(
+      "examples/OverrideNonIOWithIO.minijava",
+      List(
+        CompilerMessage(CompilerError, TypeCheckingError, None, "IO method \"doNoIO\" of child class \"A\" overrides non-io method in parent class \"B\".")
+      )
+    )
+  }
+
+  it should "pass when a class overrides an io method as io" in {
+    expectPassWithClasses(
+      "examples/OverrideIOWithIO.minijava",
+      List("OverrideIOWithIO", "A", "B")
+    )
+  }
+
   private def expectPassWithClasses(inputFile: String, expectedClasses: List[String]): Unit = {
     val input = Main.readFile(inputFile)
 

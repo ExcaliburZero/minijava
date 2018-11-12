@@ -121,6 +121,12 @@ object TypeChecking {
                   if ((childMatches ++ parentNonCovariant).distinct.length > 1) {
                     failBadMethodOverloading(classType.getName(), name, parameterTypes, childMatches ++ parentNonCovariant, errors)
                   }
+
+                  val childIO = childMatches.filter(_.isIO)
+                  val parentIO = parentMatches.filter(_.isIO)
+                  if (childIO.nonEmpty && parentIO.isEmpty && parentMatches.nonEmpty) {
+                    failIOOverride(classType, childIO, errors)
+                  }
                 })
             })
         case _ =>
@@ -273,6 +279,15 @@ object TypeChecking {
   private def failUnknownClassVariableType(variable: Variable, classLikeType: ClassLikeType, errors: ArrayBuffer[CompilerMessage]): Unit = {
     val message = "Unknown type \"%s\" for class variable \"%s\" in class \"%s\"."
       .format(variable.typeName, variable.name, classLikeType.getName())
+
+    val err = CompilerMessage(CompilerError, TypeCheckingError, None, message)
+
+    errors.append(err)
+  }
+
+  private def failIOOverride(classLikeType: ClassLikeType, childIOMethods: List[Method], errors: ArrayBuffer[CompilerMessage]): Unit = {
+    val message = "IO method \"%s\" of child class \"%s\" overrides non-io method in parent class \"%s\"."
+      .format(childIOMethods.head.name, classLikeType.getName(), classLikeType.getParentClass().get)
 
     val err = CompilerMessage(CompilerError, TypeCheckingError, None, message)
 

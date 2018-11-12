@@ -1,0 +1,19 @@
+class OverrideNonIOWithIO {
+    public static io void main(String[] a){
+        System.out.println(1);
+    }
+}
+
+class A extends B {
+    public io int doNoIO() {
+        System.out.println(2);
+
+        return 4;
+    }
+}
+
+class B {
+    public int doNoIO() {
+        return 3;
+    }
+}
