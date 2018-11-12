@@ -89,11 +89,11 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
 
     assignmentStatement.context = variableContext
 
-    TypeDefinition.conformsTo(expressionType, variableType, a.typeTable) match {
-      case Some(t) => t
-      case None => failTypeCheck(expressionType, variableType, a.typeTable, location,
-        "assignment statement for variable \"%s\"".format(assignmentStatement.name.name))
-    }
+    TypeDefinition.conformsTo(expressionType, variableType, a.typeTable)
+      .getOrElse(
+        failTypeCheck(expressionType, variableType, a.typeTable, location,
+          "assignment statement for variable \"%s\"".format(assignmentStatement.name.name))
+      )
   }
 
   override def visitArrayAssignmentStatement(arrayAssignmentStatement: ArrayAssignmentStatement, a: TypeVisitorContext): TypeDefinition = {
@@ -101,26 +101,26 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
 
     val location = LineNumber(arrayAssignmentStatement.line)
 
-    TypeDefinition.conformsTo(indexType, PrimitiveIntType, a.typeTable) match {
-      case Some(t) => t
-      case None => failTypeCheck(indexType, PrimitiveIntType, a.typeTable, location, "array assignment index expression")
-    }
+    TypeDefinition.conformsTo(indexType, PrimitiveIntType, a.typeTable)
+      .getOrElse(
+        failTypeCheck(indexType, PrimitiveIntType, a.typeTable, location, "array assignment index expression")
+      )
 
     val valueType = visit(arrayAssignmentStatement.valueExpression, a)
 
-    TypeDefinition.conformsTo(valueType, PrimitiveIntType, a.typeTable) match {
-      case Some(t) => t
-      case None => failTypeCheck(valueType, PrimitiveIntType, a.typeTable, location, "array assignment value expression")
-    }
+    TypeDefinition.conformsTo(valueType, PrimitiveIntType, a.typeTable)
+      .getOrElse(
+        failTypeCheck(valueType, PrimitiveIntType, a.typeTable, location, "array assignment value expression")
+      )
 
     val (arrayType, arrayContext) = getVarType(arrayAssignmentStatement.name.name, a.curMethod, a.curClass, a.typeTable, location)
 
     arrayAssignmentStatement.context = arrayContext
 
-    TypeDefinition.conformsTo(arrayType, PrimitiveIntArrayType, a.typeTable) match {
-      case Some(t) => t
-      case None => failTypeCheck(arrayType, PrimitiveIntArrayType, a.typeTable, location, "array assignment statement")
-    }
+    TypeDefinition.conformsTo(arrayType, PrimitiveIntArrayType, a.typeTable)
+        .getOrElse(
+          failTypeCheck(arrayType, PrimitiveIntArrayType, a.typeTable, location, "array assignment statement")
+        )
 
     PrimitiveVoidType
   }
@@ -159,17 +159,17 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
 
     val indexType = visit(arrayAccessExpression.indexExpression, a)
     val indexExpected = PrimitiveIntType
-    val resultingIndexType = TypeDefinition.conformsTo(indexType, indexExpected, a.typeTable) match {
-      case Some(t) => t
-      case None => failTypeCheck(indexType, indexExpected, a.typeTable, location, "array access index expression")
-    }
+    val resultingIndexType = TypeDefinition.conformsTo(indexType, indexExpected, a.typeTable)
+      .getOrElse(
+        failTypeCheck(indexType, indexExpected, a.typeTable, location, "array access index expression")
+      )
 
     val arrayType = visit(arrayAccessExpression.arrayExpression, a)
     val arrayExpected = PrimitiveIntArrayType
-    val resultingArrayType = TypeDefinition.conformsTo(arrayType, arrayExpected, a.typeTable) match {
-      case Some(t) => t
-      case None => failTypeCheck(arrayType, arrayExpected, a.typeTable, location, "array access expression")
-    }
+    val resultingArrayType = TypeDefinition.conformsTo(arrayType, arrayExpected, a.typeTable)
+      .getOrElse(
+        failTypeCheck(arrayType, arrayExpected, a.typeTable, location, "array access expression")
+      )
 
     if (resultingIndexType == FailType || resultingArrayType == FailType) {
       FailType
@@ -181,10 +181,10 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
   override def visitArrayLengthExpression(arrayLengthExpression: ArrayLengthExpression, a: TypeVisitorContext): TypeDefinition = {
     val arrayType = visit(arrayLengthExpression.arrayExpression, a)
     val arrayExpected = PrimitiveIntArrayType
-    val resultingArrayType = TypeDefinition.conformsTo(arrayType, arrayExpected, a.typeTable) match {
-      case Some(t) => t
-      case None => failTypeCheck(arrayType, arrayExpected, a.typeTable, ???, "array length expression")
-    }
+    val resultingArrayType = TypeDefinition.conformsTo(arrayType, arrayExpected, a.typeTable)
+      .getOrElse( // TODO: Get the actual location
+        failTypeCheck(arrayType, arrayExpected, a.typeTable, ???, "array length expression")
+      )
 
     if (resultingArrayType == FailType) {
       FailType
@@ -261,10 +261,10 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
 
     val location = LineColumn(newObjectExpression.line, newObjectExpression.column)
 
-    a.typeTable.get(className) match {
-      case Some(t) => t
-      case None => failInstantiateUnknownClass(className, location)
-    }
+    a.typeTable.get(className)
+      .getOrElse(
+        failInstantiateUnknownClass(className, location)
+      )
   }
 
   override def visitNegatedExpression(negatedExpression: NegatedExpression, a: TypeVisitorContext): TypeDefinition = {
@@ -272,10 +272,10 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
 
     val location = LineColumn(negatedExpression.line, negatedExpression.column)
 
-    TypeDefinition.conformsTo(expressionType, PrimitiveBooleanType, a.typeTable) match {
-      case Some(t) => t
-      case None => failTypeCheck(expressionType, PrimitiveBooleanType, a.typeTable, location, "negated expression")
-    }
+    TypeDefinition.conformsTo(expressionType, PrimitiveBooleanType, a.typeTable)
+      .getOrElse(
+        failTypeCheck(expressionType, PrimitiveBooleanType, a.typeTable, location, "negated expression")
+      )
   }
 
   override def visitParenedExpression(parenedExpression: ParenedExpression, a: TypeVisitorContext): TypeDefinition = {
@@ -297,10 +297,9 @@ class TypeCheckingVisitor extends ASTVisitor[TypeVisitorContext, TypeDefinition]
     val localNameMatches = curMethod.localVariables
       .filter(lv => lv.name == name)
 
-    localNameMatches.headOption match {
-      case Some(t) => return (typeTable.get(t.typeName).get, Some(MethodVariable(curMethod, LocalVariable)))
-      case None =>
-    }
+    localNameMatches.headOption.foreach(t =>
+      return (typeTable.get(t.typeName).get, Some(MethodVariable(curMethod, LocalVariable)))
+    )
 
     // If it is not a local variable, then check if it is a parameter
     val paramNameMatches = curMethod.parameters

@@ -60,7 +60,7 @@ object TypeChecking {
           classType.methods.groupBy(m => (m.name, m.parameters, m.returnType))
             .filter(_._2.length > 1)
             .foreach(dm => {
-              failDuplicateMethod(classType.getName(), dm._1, dm._2.length, errors)
+              failDuplicateMethod(classType.getName(), dm._1, errors)
             })
         case _ =>
       }
@@ -69,7 +69,7 @@ object TypeChecking {
     errors.toList
   }
 
-  private def failDuplicateMethod(className: String, methodInfo: (String, List[Variable], String), numDuplicates: Int, errors: ArrayBuffer[CompilerMessage]): Unit = {
+  private def failDuplicateMethod(className: String, methodInfo: (String, List[Variable], String), errors: ArrayBuffer[CompilerMessage]): Unit = {
     val methodName = methodInfo._1
     val params = methodInfo._2
     val returnType = methodInfo._3
@@ -189,10 +189,7 @@ object TypeChecking {
       case _: MainClassType =>
       case _ =>
         visitor.checkReturnType(
-          typeTable.get(method.returnType) match {
-            case Some(c) => c
-            case None => FailType
-          },
+          typeTable.get(method.returnType).getOrElse(FailType),
           method.returnExpression.get,
           context
         )
@@ -231,7 +228,7 @@ object TypeChecking {
     errors.toList
   }
 
-  private def ioCheckMethod(typeTable: TypeTable, classType: ClassLikeType, method: Method, errors: ArrayBuffer[CompilerMessage]): Unit = {
+  private def ioCheckMethod(classType: ClassLikeType, method: Method, errors: ArrayBuffer[CompilerMessage]): Unit = {
     val shouldBeIO = method.isIO
 
     val visitor = new IOCheckingVisitor()
@@ -256,10 +253,10 @@ object TypeChecking {
       t match {
         case classType: ClassType =>
           for (m <- classType.methods) {
-            ioCheckMethod(typeTable, classType, m, errors)
+            ioCheckMethod(classType, m, errors)
           }
         case mainClassType: MainClassType =>
-          ioCheckMethod(typeTable, mainClassType, mainClassType.mainMethod, errors)
+          ioCheckMethod(mainClassType, mainClassType.mainMethod, errors)
         case _ =>
       }
     }
