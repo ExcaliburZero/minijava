@@ -2,14 +2,14 @@ package minijava
 
 import java.io.FileOutputStream
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Paths, NoSuchFileException}
 
 import minijava.codegeneration.CodeGenerationVisitor
-import org.antlr.v4.runtime._
 import minijava.grammar._
 import minijava.messages.{CompilerError, CompilerMessage, CompilerWarning}
 import minijava.parser.{MiniJavaVisitorImpl, ParseErrorListener}
 import minijava.typechecking.{ClassType, MainClassType, TypeChecking, TypeTable}
+import org.antlr.v4.runtime._
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -24,7 +24,13 @@ object Main {
   }
 
   def compile(filepath: String): Unit = {
-    val input = readFile(filepath)
+    val input = (try {
+      readFile(filepath)
+    } catch {
+      case e: NoSuchFileException =>
+        println("%s[error]%s Provided file \"%s\" does not exist.\n".format(Console.RED, Console.RESET, filepath))
+        System.exit(1)
+    }).asInstanceOf[String]
 
     val ast = (parseString(input) match {
       case Right(a) => a
