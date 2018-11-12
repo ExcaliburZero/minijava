@@ -231,6 +231,8 @@ object TypeChecking {
     val visitor = new IOCheckingVisitor()
 
     method.statements.foreach(visitor.visit(_, ()))
+    method.returnExpression.foreach(visitor.visit(_, ()))
+
     val ioInstances = visitor.getIOInstances()
 
     (shouldBeIO, ioInstances.nonEmpty) match {

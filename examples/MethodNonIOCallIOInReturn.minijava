@@ -1,0 +1,17 @@
+class MethodNonIOCallIOInReturn {
+    public static io void main(String[] a){
+        System.out.println(1);
+    }
+}
+
+class A {
+    public int doNotDoIO() {
+        return this.doIO();
+    }
+
+    public io int doIO() {
+        System.out.println(2);
+
+        return 3;
+    }
+}

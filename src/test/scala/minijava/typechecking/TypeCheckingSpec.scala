@@ -406,6 +406,42 @@ class TypeCheckingSpec extends FlatSpec with Matchers {
     )
   }
 
+  it should "fail when a main method that has an io method call is not io" in {
+    expectTypeCheckErrors(
+      "examples/MainNonIOCallsIO.minijava",
+      List(
+        CompilerMessage(CompilerError, TypeCheckingError, None, "IO present in non-io method \"main\" of class \"MainNonIOCallsIO\".\n\nln:4 col:16\tCall of io method \"doIO\"")
+      )
+    )
+  }
+
+  it should "fail when a class method that has a print statement is not io" in {
+    expectTypeCheckErrors(
+      "examples/MethodPrintNotIO.minijava",
+      List(
+        CompilerMessage(CompilerError, TypeCheckingError, None, "IO present in non-io method \"doIO\" of class \"A\".\n\nln:9\tPrint statement")
+      )
+    )
+  }
+
+  it should "fail when a class method that has an io method call is not io" in {
+    expectTypeCheckErrors(
+      "examples/MethodNotIOCallIOMethod.minijava",
+      List(
+        CompilerMessage(CompilerError, TypeCheckingError, None, "IO present in non-io method \"doNotDoIO\" of class \"A\".\n\nln:11 col:12\tCall of io method \"doIO\"")
+      )
+    )
+  }
+
+  it should "fail when a class method that has a return of an io method call is not io" in {
+    expectTypeCheckErrors(
+      "examples/MethodNonIOCallIOInReturn.minijava",
+      List(
+        CompilerMessage(CompilerError, TypeCheckingError, None, "IO present in non-io method \"doNotDoIO\" of class \"A\".\n\nln:9 col:15\tCall of io method \"doIO\"")
+      )
+    )
+  }
+
   it should "give a warning when a main method is marked io, but contains no io" in {
     expectTypeCheckErrors(
       "examples/UnneccessaryIOMain.minijava",
