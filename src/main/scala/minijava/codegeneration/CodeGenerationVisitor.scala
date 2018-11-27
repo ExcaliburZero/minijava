@@ -216,8 +216,16 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   }
 
   override def visitMethodCallExpression(methodCallExpression: MethodCallExpression, a: MethodVisitor): Unit = {
+    // Create labels to handle the case where the object is null
+    val nullLabel = new Label()
+    val endNullCheckLabel = new Label()
+
     // Push the object to call the method on
     visit(methodCallExpression.objectExpression, a)
+
+    // Check if the object is null
+    a.visitInsn(Opcodes.DUP)
+    a.visitJumpInsn(Opcodes.IFNULL, nullLabel)
 
     // Push all of the parameters
     methodCallExpression.parameters.foreach(visit(_, a))
@@ -229,6 +237,38 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
       methodCallExpression.methodName.name,
       methodCallExpression.method.get.getSignature()
     )
+
+    // Jump past the NullPointerException throw
+    a.visitJumpInsn(Opcodes.GOTO, endNullCheckLabel)
+
+    // Handle the case where the object is null
+    a.visitLabel(nullLabel)
+
+    // Pop the duplicated instance of the object
+    a.visitInsn(Opcodes.POP)
+
+    // Throw a NullPointerException
+    visitThrowNullPointerException(a)
+
+    // Add a label to end the null check
+    a.visitLabel(endNullCheckLabel)
+  }
+
+  private def visitThrowNullPointerException(a: MethodVisitor): Unit = {
+    // Create the NullPointerException object
+    a.visitTypeInsn(Opcodes.NEW, "java/lang/NullPointerException")
+    a.visitInsn(Opcodes.DUP)
+
+    // Call its constructor
+    a.visitMethodInsn(
+      Opcodes.INVOKESPECIAL,
+      "java/lang/NullPointerException",
+      "<init>",
+      "()V"
+    )
+
+    // Throw the exception
+    a.visitInsn(Opcodes.ATHROW)
   }
 
   override def visitIntegerLiteral(integerLiteral: IntegerLiteral, a: MethodVisitor): Unit = {
