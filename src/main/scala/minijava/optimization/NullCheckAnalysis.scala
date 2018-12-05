@@ -2,7 +2,9 @@ package minijava.optimization
 
 import java.util
 
-import soot.jimple.internal.ConditionExprBox
+import soot.Value
+import soot.jimple.NullConstant
+import soot.jimple.internal.{ConditionExprBox, ImmediateBox}
 import soot.toolkits.graph.DirectedGraph
 import soot.toolkits.scalar.ForwardFlowAnalysis
 
@@ -23,7 +25,7 @@ class NullCheckAnalysis(graph: DirectedGraph[soot.Unit]) extends ForwardFlowAnal
 
     println(d)
 
-    for (b <- d.getUseBoxes.asScala) {
+    /*for (b <- d.getUseBoxes.asScala) {
       b match {
         case b: ConditionExprBox =>
           println(b)
@@ -31,9 +33,14 @@ class NullCheckAnalysis(graph: DirectedGraph[soot.Unit]) extends ForwardFlowAnal
           unitsToRemove.append(d)
         case _ => ()
       }
+    }*/
+
+    if (isNullCheckCondition(d)) {
+      unitsToRemove.append(d)
     }
 
-    //println(d.getUseAndDefBoxes)
+    println(d.getUseAndDefBoxes)
+    println(d.getUseAndDefBoxes.size())
 
     println("")
 
@@ -56,5 +63,12 @@ class NullCheckAnalysis(graph: DirectedGraph[soot.Unit]) extends ForwardFlowAnal
 
   override def copy(source: util.ArrayList[soot.Unit], dest: util.ArrayList[soot.Unit]): Unit = {
     dest.addAll(source)
+  }
+
+  private def isNullCheckCondition(unit: soot.Unit): Boolean = {
+    unit.getUseAndDefBoxes.size() == 3 &&
+      unit.getUseAndDefBoxes.get(2).isInstanceOf[ConditionExprBox] &&
+      unit.getUseAndDefBoxes.get(1).isInstanceOf[ImmediateBox] &&
+      unit.getUseAndDefBoxes.get(1).asInstanceOf[ImmediateBox].getValue.eq(NullConstant.v())
   }
 }
