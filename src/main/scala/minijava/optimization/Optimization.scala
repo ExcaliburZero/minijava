@@ -91,8 +91,6 @@ object Optimization {
   }
 
   private def writeToClassFile(sootClass: SootClass, fileName: String): Unit = {
-    //val fileName = SourceLocator.v().getFileNameFor(sootClass, Options.output_format_class)
-
     val streamOut = new JasminOutputStream(new FileOutputStream(fileName))
     val writerOut = new PrintWriter(new OutputStreamWriter(streamOut))
 
