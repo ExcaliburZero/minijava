@@ -14,9 +14,9 @@ import org.antlr.v4.runtime._
 
 object Main {
   def main(args: Array[String]): Unit = {
-    NullCheckOptimization.main(Array())
+    //NullCheckOptimization.main(Array())
 
-    ???
+    //???
 
     if (args.length < 1) {
       println("%s[error]%s No source file provided. I don't know which file to compile.\n".format(Console.RED, Console.RESET))
@@ -61,7 +61,10 @@ object Main {
 
     val mainClassName = ast.mainClass.name.name
 
-    generateCode(typeTable, mainClassName, filepath)
+    val classFiles = generateCode(typeTable, mainClassName, filepath)
+
+    NullCheckOptimization.copyClassFilesForOptimization(classFiles)
+    classFiles.foreach(NullCheckOptimization.optimizeFile)
 
     printLogo()
   }
@@ -99,7 +102,7 @@ object Main {
     new String(Files.readAllBytes(Paths.get(filepath)), StandardCharsets.UTF_8)
   }
 
-  def generateCode(typeTable: TypeTable, mainClassName: String, filepath: String): Unit = {
+  def generateCode(typeTable: TypeTable, mainClassName: String, filepath: String): List[String] = {
     val visitor = new CodeGenerationVisitor()
 
     val mainClassType = typeTable.get(mainClassName).get.asInstanceOf[MainClassType]
@@ -111,6 +114,8 @@ object Main {
       .foreach(visitor.visitClassType(filepath, _))
 
     writeClassFiles(visitor)
+
+    visitor.getClassWriters().map(_._1 + ".class")
   }
 
   private def writeClassFiles(visitor: CodeGenerationVisitor): Unit = {

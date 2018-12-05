@@ -351,7 +351,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   }
 
   def visitMainClassType(fileName: String, mainClassType: MainClassType): Unit = {
-    val classWriter = new ClassWriter(0)
+    val classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES)
 
     classWriters.append((mainClassType.name, classWriter))
 
@@ -394,13 +394,14 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     // Return and end the method
     methodVisitor.visitInsn(Opcodes.RETURN)
 
-    methodVisitor.visitMaxs(2, 1) // TODO: do this better? Maybe have each visit return a max stack?
+    // Have ASM compute the max stack size and number of locals
+    methodVisitor.visitMaxs(-1, -1)
 
     methodVisitor.visitEnd()
   }
 
   def visitClassType(fileName: String, classType: ClassType): Unit = {
-    val classWriter = new ClassWriter(0)
+    val classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES)
 
     classWriters.append((classType.name, classWriter))
 
@@ -499,8 +500,8 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
     // Add the label to mark the end of the method
     methodVisitor.visitLabel(methodEndLabel)
 
-    // Specify the max stack size and number of local variables for the method
-    methodVisitor.visitMaxs(2, method.localVariables.length) // TODO: do this better? Maybe have each visit return a max stack?
+    // Have ASM compute the max stack size and number of locals
+    methodVisitor.visitMaxs(-1, -1)
 
     methodVisitor.visitEnd()
   }
