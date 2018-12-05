@@ -46,6 +46,10 @@ class NullCheckAnalysis(graph: DirectedGraph[soot.Unit]) extends ForwardFlowAnal
   }
 
   override def merge(in1: util.ArrayList[soot.Unit], in2: util.ArrayList[soot.Unit], out: util.ArrayList[soot.Unit]): Unit = {
+    println("~~~~~")
+    println("Merge")
+    println("~~~~~")
+
     out.addAll(in1)
     out.addAll(in2)
   }
@@ -53,7 +57,4 @@ class NullCheckAnalysis(graph: DirectedGraph[soot.Unit]) extends ForwardFlowAnal
   override def copy(source: util.ArrayList[soot.Unit], dest: util.ArrayList[soot.Unit]): Unit = {
     dest.addAll(source)
   }
-}
-
-object NullCheckAnalysis {
 }

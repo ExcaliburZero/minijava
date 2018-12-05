@@ -3,8 +3,9 @@ package minijava.optimization
 import java.io.{File, FileOutputStream, OutputStreamWriter, PrintWriter}
 import java.nio.file.{Files, StandardCopyOption}
 
+import soot.jimple.Jimple
 import soot.options.Options
-import soot.shimple.Shimple
+import soot.shimple.{Shimple, ShimpleBody}
 import soot.toolkits.graph.ExceptionalUnitGraph
 import soot.util.JasminOutputStream
 import soot.{Scene, SootClass}
@@ -35,13 +36,15 @@ object NullCheckOptimization {
     addClassDir(TMP_DIR)
 
     val className = getFileNameWithoutExtension(classFilePath)
+    val classObj = loadClassFromClassPath(className)
 
-    val a = loadClassFromClassPath(className)
-    jimpleToShimple(a)
+    jimpleToShimple(classObj)
 
-    removeNullChecks(a)
+    removeNullChecks(classObj)
 
-    writeToClassFile(a, classFilePath)
+    shimpleToJimple(classObj)
+
+    writeToClassFile(classObj, classFilePath)
 
     println(s"Wrote to: $classFilePath")
   }
@@ -123,7 +126,7 @@ object NullCheckOptimization {
     *
     * @param jimpleClass The class to convert from Jimple to Shimple.
     */
-  def jimpleToShimple(jimpleClass: SootClass): Unit = {
+  private def jimpleToShimple(jimpleClass: SootClass): Unit = {
     for (method <- jimpleClass.getMethods.asScala) {
       val jimpleBody = method.retrieveActiveBody()
 
@@ -131,6 +134,14 @@ object NullCheckOptimization {
       shimpleBody.addAllTagsOf(jimpleBody)
 
       method.setActiveBody(shimpleBody)
+    }
+  }
+
+  private def shimpleToJimple(shimpleClass: SootClass): Unit = {
+    for (method <- shimpleClass.getMethods.asScala) {
+      val shimpleBody = method.retrieveActiveBody().asInstanceOf[ShimpleBody]
+
+      method.setActiveBody(shimpleBody.toJimpleBody)
     }
   }
 }
