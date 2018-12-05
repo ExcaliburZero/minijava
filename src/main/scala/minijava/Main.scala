@@ -2,17 +2,22 @@ package minijava
 
 import java.io.FileOutputStream
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths, NoSuchFileException}
+import java.nio.file.{Files, NoSuchFileException, Paths}
 
 import minijava.codegeneration.CodeGenerationVisitor
 import minijava.grammar._
 import minijava.messages.{CompilerError, CompilerMessage, CompilerWarning}
+import minijava.optimization.NullCheckOptimization
 import minijava.parser.{MiniJavaVisitorImpl, ParseErrorListener}
 import minijava.typechecking.{ClassType, MainClassType, TypeChecking, TypeTable}
 import org.antlr.v4.runtime._
 
 object Main {
   def main(args: Array[String]): Unit = {
+    NullCheckOptimization.main(Array())
+
+    ???
+
     if (args.length < 1) {
       println("%s[error]%s No source file provided. I don't know which file to compile.\n".format(Console.RED, Console.RESET))
       println("Be sure to provide the source file to compile as the first command line argument.")

@@ -351,7 +351,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   }
 
   def visitMainClassType(fileName: String, mainClassType: MainClassType): Unit = {
-    val classWriter = new ClassWriter(true)
+    val classWriter = new ClassWriter(0)
 
     classWriters.append((mainClassType.name, classWriter))
 
@@ -400,7 +400,7 @@ class CodeGenerationVisitor extends ASTVisitor[MethodVisitor, Unit] {
   }
 
   def visitClassType(fileName: String, classType: ClassType): Unit = {
-    val classWriter = new ClassWriter(true)
+    val classWriter = new ClassWriter(0)
 
     classWriters.append((classType.name, classWriter))
 
