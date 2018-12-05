@@ -3,8 +3,8 @@ package minijava.optimization
 import java.util
 
 import soot.Local
-import soot.jimple.NullConstant
-import soot.jimple.internal.{ConditionExprBox, ImmediateBox}
+import soot.jimple.internal._
+import soot.jimple.{NullConstant, ThisRef}
 import soot.toolkits.graph.DirectedGraph
 import soot.toolkits.scalar.ForwardFlowAnalysis
 
@@ -28,6 +28,15 @@ class NullCheckAnalysis(graph: DirectedGraph[soot.Unit]) extends ForwardFlowAnal
       }
 
       out.add(nullCheckedObj)
+    } else if (isSimpleAssignment(d)) {
+      val local = getVarAssignedInSimpleAssignment(d)
+
+      if (isAssignmentToNewObject(d) || isAssignedValueKnownNonNull(d, in)) {
+        out.add(local)
+      }
+    } else if (isAssignmentToThis(d)) {
+      val local = getVarAssignedToThis(d)
+      out.add(local)
     }
 
     copy(in, out)
@@ -55,6 +64,43 @@ class NullCheckAnalysis(graph: DirectedGraph[soot.Unit]) extends ForwardFlowAnal
   }
 
   private def getNullCheckedLocal(unit: soot.Unit): Local = {
+    unit.getUseAndDefBoxes.get(0).getValue.asInstanceOf[Local]
+  }
+
+  private def isSimpleAssignment(unit: soot.Unit): Boolean = {
+    unit.getUseAndDefBoxes.size() == 2 &&
+      unit.getUseAndDefBoxes.get(0).isInstanceOf[VariableBox] &&
+      unit.getUseAndDefBoxes.get(1).isInstanceOf[RValueBox]
+  }
+
+  private def getVarAssignedInSimpleAssignment(unit: soot.Unit): Local = {
+    unit.getUseAndDefBoxes.get(0).getValue.asInstanceOf[Local]
+  }
+
+  private def isAssignedValueKnownNonNull(unit: soot.Unit, in: util.HashSet[Local]): Boolean = {
+    isAssignmentToPrevVariable(unit) && in.contains(getAssignedVar(unit))
+  }
+
+  private def isAssignmentToPrevVariable(unit: soot.Unit): Boolean = {
+    unit.getUseAndDefBoxes.get(1).getValue.isInstanceOf[JimpleLocal]
+  }
+
+  private def getAssignedVar(unit: soot.Unit): Local = {
+    unit.getUseAndDefBoxes.get(1).getValue.asInstanceOf[Local]
+  }
+
+  private def isAssignmentToNewObject(unit: soot.Unit): Boolean = {
+    unit.getUseAndDefBoxes.get(1).getValue.isInstanceOf[JNewExpr]
+  }
+
+  private def isAssignmentToThis(unit: soot.Unit): Boolean = {
+    unit.getUseAndDefBoxes.size() == 2 &&
+      unit.getUseAndDefBoxes.get(0).isInstanceOf[JimpleLocalBox] &&
+      unit.getUseAndDefBoxes.get(1).isInstanceOf[IdentityRefBox] &&
+      unit.getUseAndDefBoxes.get(1).getValue.isInstanceOf[ThisRef]
+  }
+
+  private def getVarAssignedToThis(unit: soot.Unit): Local = {
     unit.getUseAndDefBoxes.get(0).getValue.asInstanceOf[Local]
   }
 }

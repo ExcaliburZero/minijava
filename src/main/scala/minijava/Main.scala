@@ -7,7 +7,7 @@ import java.nio.file.{Files, NoSuchFileException, Paths}
 import minijava.codegeneration.CodeGenerationVisitor
 import minijava.grammar._
 import minijava.messages.{CompilerError, CompilerMessage, CompilerWarning}
-import minijava.optimization.NullCheckOptimization
+import minijava.optimization.Optimization
 import minijava.parser.{MiniJavaVisitorImpl, ParseErrorListener}
 import minijava.typechecking.{ClassType, MainClassType, TypeChecking, TypeTable}
 import org.antlr.v4.runtime._
@@ -63,8 +63,8 @@ object Main {
 
     val classFiles = generateCode(typeTable, mainClassName, filepath)
 
-    NullCheckOptimization.copyClassFilesForOptimization(classFiles)
-    classFiles.foreach(NullCheckOptimization.optimizeFile)
+    Optimization.copyClassFilesForOptimization(classFiles)
+    classFiles.foreach(Optimization.optimizeFile)
 
     printLogo()
   }

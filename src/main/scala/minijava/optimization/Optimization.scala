@@ -3,7 +3,6 @@ package minijava.optimization
 import java.io.{File, FileOutputStream, OutputStreamWriter, PrintWriter}
 import java.nio.file.{Files, StandardCopyOption}
 
-import soot.jimple.Jimple
 import soot.options.Options
 import soot.shimple.{Shimple, ShimpleBody}
 import soot.toolkits.graph.ExceptionalUnitGraph
@@ -12,7 +11,7 @@ import soot.{Scene, SootClass}
 
 import scala.collection.JavaConverters._
 
-object NullCheckOptimization {
+object Optimization {
   /**
     * The temporary directory to put class files in before attempting to optimize them. This allows them to be loaded
     * into the class path without accidentally loading in other files, which would lead to odd problems.
@@ -26,8 +25,6 @@ object NullCheckOptimization {
   }
 
   def optimizeFile(classFilePath: String): Unit = {
-    println(s"Try optimize: $classFilePath")
-
     if (!isFileInDir(classFilePath, TMP_DIR)) {
       throw new Exception("Attempted to optimize class file \"" + classFilePath +
         "\", but this file has not yet been copied for optimization (by means of copyClassFilesForOptimization).")
@@ -45,8 +42,6 @@ object NullCheckOptimization {
     shimpleToJimple(classObj)
 
     writeToClassFile(classObj, classFilePath)
-
-    println(s"Wrote to: $classFilePath")
   }
 
   private def removeNullChecks(sootClass: SootClass): Unit = {
