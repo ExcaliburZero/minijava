@@ -1,0 +1,8 @@
+language: scala
+
+install:
+  - wget https://www.antlr.org/download/antlr-4.7.1-complete.jar
+
+script:
+  - java -jar antlr-4.7.1-complete.jar -visitor -package minijava.grammar src/main/java/minijava/grammar/MiniJava.g4
+  - sbt test
