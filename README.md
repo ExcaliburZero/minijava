@@ -1,5 +1,5 @@
 # Minijava Compiler
-This is a compiler for the language Minijava that I implementeed as a part of DOug Lea's CSC 444 course in Fall 2018.
+This is a compiler for the language Minijava that I implementeed as a part of Doug Lea's CSC 444 course in Fall 2018.
 
 ```
 $ cat HelloOne.minijava 
@@ -43,3 +43,6 @@ $ sbt "run HelloOne.minijava"
 $ java HelloOne
 1
 ```
+
+## Libraries and frameworks used
+The compiler uses Antlr for parsing, ASM for generating JVM bytecode, and Soot for performing optimization.
