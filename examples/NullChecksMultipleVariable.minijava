@@ -1,0 +1,23 @@
+class NullChecksMultipleVariable {
+    public static io void main(String[] a){
+        System.out.println(new MyClass().hi(new MyClass(), new MyClass(), 2));
+    }
+}
+
+class MyClass {
+    public int hi(MyClass a, MyClass b, int i) {
+        int ret;
+        ret = 0;
+
+        ret = ret + (a.bye());
+        ret = ret + (b.bye());
+        ret = ret + (a.bye());
+        ret = ret + (b.bye());
+
+        return ret;
+    }
+
+    public int bye() {
+        return 2;
+    }
+}

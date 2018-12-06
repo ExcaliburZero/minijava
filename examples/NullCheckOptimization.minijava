@@ -1,0 +1,51 @@
+class NullCheckOptimization {
+    public static io void main(String[] a){
+        System.out.println(new A().fooPrime(0));
+    }
+}
+
+class A {
+    public int fooPrime(int a) {
+        return this.foo(this, a);
+    }
+
+    public int foo(A a2, int a) {
+        int ret;
+        int i;
+
+        ret = 0;
+        i = 0;
+        while (i < 1) {
+            if (a < 8) {
+                ret = ret + (a2.foo(a2, a + 1));
+                ret = ret + (a2.foo(a2, a + 1));
+                ret = ret + (a2.foo(a2, a + 1));
+                ret = ret + (a2.foo(a2, a + 1));
+                ret = ret + (a2.foo(a2, a + 1));
+                ret = ret + (a2.foo(a2, a + 1));
+                ret = ret + (a2.foo(a2, a + 1));
+                ret = ret + (a2.foo(a2, a + 1));
+                ret = ret + (a2.foo(a2, a + 1));
+                ret = ret + (a2.foo(a2, a + 1));
+                ret = ret + (a2.foo(a2, a + 1));
+                ret = ret + (a2.foo(a2, a + 1));
+                ret = ret + (a2.foo(a2, a + 1));
+                ret = ret + (a2.foo(a2, a + 1));
+                ret = ret + (a2.foo(a2, a + 1));
+                //ret = ret + (a2.foo(a2, a + 1));
+                //ret = ret + (a2.foo(a2, a + 1));
+                //ret = ret + (a2.foo(a2, a + 1));
+            } else {
+                ret = 1;
+            }
+            i = i + 1;
+        }
+        return ret;
+    }
+}
+
+class B extends A {
+    public int foo(A a2, int a) {
+        return 0;
+    }
+}

@@ -1,0 +1,23 @@
+class NullCheckConstruct {
+    public static io void main(String[] a){
+        System.out.println(new MyClass().hi(2));
+    }
+}
+
+class MyClass {
+    public int hi(int i) {
+        int ret;
+        MyClass a;
+        ret = 0;
+
+        a = new MyClass();
+
+        ret = ret + (a.bye());
+
+        return ret;
+    }
+
+    public int bye() {
+        return 2;
+    }
+}

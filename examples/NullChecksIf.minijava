@@ -1,0 +1,25 @@
+class NullChecksIf {
+    public static io void main(String[] a){
+        System.out.println(new MyClass().hi(new MyClass(), 2));
+    }
+}
+
+class MyClass {
+    public int hi(MyClass a, int i) {
+        int ret;
+        ret = 0;
+
+        if (i < 3) {
+            ret = ret + (a.bye());
+        } else {
+        }
+
+        ret = ret + (a.bye());
+
+        return ret;
+    }
+
+    public int bye() {
+        return 2;
+    }
+}

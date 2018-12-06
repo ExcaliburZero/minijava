@@ -1,0 +1,29 @@
+class NullChecksLoop {
+    public static io void main(String[] a){
+        System.out.println(new MyClass().hi(new MyClass(), 2));
+    }
+}
+
+class MyClass {
+    public int hi(MyClass a, int i) {
+        int ret;
+        int j;
+
+        ret = 0;
+        j = 0;
+
+        while (j < i) {
+            ret = ret + (a.bye());
+
+            j = j + 1;
+        }
+
+        ret = ret + (a.bye());
+
+        return ret;
+    }
+
+    public int bye() {
+        return 2;
+    }
+}
