@@ -1,0 +1,11 @@
+class MethodCallAdd {
+    public static io void main(String[] a){
+        System.out.println(2 + new Hi().hi());
+    }
+}
+
+class Hi {
+    public int hi() {
+        return 4;
+    }
+}

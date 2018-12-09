@@ -27,10 +27,10 @@ statement :
     ;
 
 expression :
-      expression binary_operator=('&&' | '<' | '+' | '-' | '*') expression # BinaryOperationExpression
-    | expression '[' expression ']' # ArrayAccessExpression
+      expression '[' expression ']' # ArrayAccessExpression
     | expression '.' 'length' # ArrayLengthExpression
     | objectExpression=expression '.' IDENTIFIER'(' (expression ( ',' expression )*)? ')' # MethodCallExpression
+    | expression binary_operator=('&&' | '<' | '+' | '-' | '*') expression # BinaryOperationExpression
     | '-' INTEGER_LITERAL # NegatedIntegerLiteral
     | INTEGER_LITERAL # IntegerLiteral
     | 'true' # True

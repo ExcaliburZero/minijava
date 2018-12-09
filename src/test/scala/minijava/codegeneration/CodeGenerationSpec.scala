@@ -348,6 +348,29 @@ class CodeGenerationSpec extends FunSpec with Matchers  {
         )
       }
     }
+
+    describe("precedence") {
+      it("should have a higher precedence for multiplication than addition") {
+        testProgram("examples/", "PlusMult.minijava",
+          "PlusMult",
+          "12\n"
+        )
+      }
+
+      it("should have a higher precedence for method calls than addition") {
+        testProgram("examples/", "MethodCallAdd.minijava",
+          "MethodCallAdd",
+          "6\n"
+        )
+      }
+
+      it("should have a higher precedence for method calls than array access") {
+        testProgram("examples/", "ArrayAccessAfterMethodCall.minijava",
+          "ArrayAccessAfterMethodCall",
+          "4\n"
+        )
+      }
+    }
   }
 
   private def writeClassFiles(visitor: CodeGenerationVisitor): Unit = {

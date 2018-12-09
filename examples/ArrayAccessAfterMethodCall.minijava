@@ -1,0 +1,16 @@
+class ArrayAccessAfterMethodCall {
+    public static io void main(String[] a){
+        System.out.println(new Hi().hi()[0]);
+    }
+}
+
+class Hi {
+    public int[] hi() {
+        int[] h;
+
+        h = new int[1];
+        h[0] = 4;
+
+        return h;
+    }
+}
