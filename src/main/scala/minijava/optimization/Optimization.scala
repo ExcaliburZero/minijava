@@ -18,12 +18,25 @@ object Optimization {
     */
   private val TMP_DIR = ".tmp"
 
+  /**
+    * Copies the specified class files into a temporary directory that allows Soot to load them without causing class
+    * path issues.
+    *
+    * This function must be run on each class file before it can be optimized.
+    *
+    * @param classFilePaths The class files to copy.
+    */
   def copyClassFilesForOptimization(classFilePaths: List[String]): Unit = {
     softCreateDirectory(TMP_DIR)
 
     classFilePaths.foreach(copyFileToDir(_, TMP_DIR))
   }
 
+  /**
+    * Performs optimizations on the specified class file.
+    *
+    * @param classFilePath The file path of the class file to optimize.
+    */
   def optimizeFile(classFilePath: String): Unit = {
     if (!isFileInDir(classFilePath, TMP_DIR)) {
       throw new Exception("Attempted to optimize class file \"" + classFilePath +
@@ -44,6 +57,11 @@ object Optimization {
     writeToClassFile(classObj, classFilePath)
   }
 
+  /**
+    * Removes all of the unnecessary null checks from the given class by mutating its methods in place.
+    *
+    * @param sootClass The class to remove the unnecessary null checks of.
+    */
   private def removeNullChecks(sootClass: SootClass): Unit = {
     // Convert the class to Shimple to take advantage of SSA
     jimpleToShimple(sootClass)
@@ -64,6 +82,11 @@ object Optimization {
     }
   }
 
+  /**
+    * Creates a new directory at the given location, does nothing if the directory already exists.
+    *
+    * @param directoryPath The path of the directory to create.
+    */
   private def softCreateDirectory(directoryPath: String): Unit = {
     val dir = new File(directoryPath)
 
@@ -79,10 +102,22 @@ object Optimization {
     Files.copy(file.toPath, destinationFile.toPath, StandardCopyOption.REPLACE_EXISTING)
   }
 
+  /**
+    * Adds the given directory to the class path for Soot so that classes in the specified directory can be loaded in by
+    * Soot to perform optimizations on them.
+    *
+    * @param classDir The directory of class files to add to Soot's class path.
+    */
   private def addClassDir(classDir: String): Unit = {
     Options.v().set_process_dir(List(classDir).asJava)
   }
 
+  /**
+    * Attempts to load the specified class from Soot's class path.
+    *
+    * @param className The name of the class to load.
+    * @return The loaded class.
+    */
   private def loadClassFromClassPath(className: String): SootClass = {
     Scene.v().loadClassAndSupport(className)
     Scene.v().loadNecessaryClasses()
@@ -90,6 +125,12 @@ object Optimization {
     Scene.v().getSootClass(className)
   }
 
+  /**
+    * Writes the given class to the specified class file path.
+    *
+    * @param sootClass The class to write to the file.
+    * @param fileName The file path to write the class file to.
+    */
   private def writeToClassFile(sootClass: SootClass, fileName: String): Unit = {
     val streamOut = new JasminOutputStream(new FileOutputStream(fileName))
     val writerOut = new PrintWriter(new OutputStreamWriter(streamOut))
@@ -130,6 +171,12 @@ object Optimization {
     }
   }
 
+  /**
+    * Converts the method bodies of the given SootClass from Shimple to Jimple. This works by mutating the object in
+    * place.
+    *
+    * @param shimpleClass The class to convert from Shimple to Jimple.
+    */
   private def shimpleToJimple(shimpleClass: SootClass): Unit = {
     for (method <- shimpleClass.getMethods.asScala) {
       val shimpleBody = method.retrieveActiveBody().asInstanceOf[ShimpleBody]
